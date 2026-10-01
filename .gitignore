@@ -141,3 +141,22 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# --- Projeto financas ---
+# Build
+dist/
+
+# Variáveis de ambiente (o .env.example é versionado)
+.env
+.env.*
+!.env.example
+
+# Banco SQLite local
+*.db
+*.db-journal
+
+# Prisma Client gerado (recriado por `prisma generate` / postinstall)
+backend/src/generated/
+
+# Editor / SO
+.DS_Store
