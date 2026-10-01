@@ -1,6 +1,6 @@
 # Finanças Pessoais
 
-App de finanças pessoais em monorepo (npm workspaces):
+App de finanças pessoais em monorepo (Yarn workspaces):
 
 - **frontend/** — React + TypeScript + Vite + Tailwind CSS
 - **backend/** — Node.js + Express + TypeScript + Prisma (SQLite)
@@ -8,35 +8,44 @@ App de finanças pessoais em monorepo (npm workspaces):
 ## Requisitos
 
 - Node.js **20+**
-- npm 10+
+- Yarn (qualquer versão; o projeto fixa o **Yarn 4.18.1** em `.yarn/releases`)
+
+Se ainda não tiver o Yarn instalado:
+
+```bash
+npm install -g yarn
+```
+
+O binário global só delega para a versão do projeto, então `yarn --version` dentro da pasta mostra `4.18.1`.
 
 ## Instalação
 
 ```bash
 git clone git@github.com:KaiokkFernandes/Moedy.git
 cd Moedy
-npm install
+yarn install
 ```
 
-O `npm install` na raiz instala as dependências dos dois workspaces e gera o Prisma Client.
+O `yarn install` na raiz instala as dependências dos dois workspaces e gera o Prisma Client.
 
 Depois, crie o arquivo de ambiente do backend e aplique as migrations:
 
 ```bash
 cp backend/.env.example backend/.env
-npm run prisma:migrate
+yarn prisma:migrate
 ```
 
-> Em versões recentes do npm, scripts de instalação de dependências são bloqueados por padrão.
-> Os pacotes que precisam deles (Prisma, better-sqlite3, esbuild) já estão liberados em
-> `allowScripts` no `package.json` da raiz. Se o npm avisar sobre scripts não revisados após
-> atualizar alguma dependência, rode `npm install-scripts ls` e aprove com
-> `npm install-scripts approve <pacote>`.
+> O Yarn 4 bloqueia scripts de build de dependências por padrão. Os pacotes que precisam deles
+> (Prisma, better-sqlite3, esbuild) estão liberados em `dependenciesMeta` no `package.json` da raiz.
+> Se surgir outra dependência nativa, adicione-a lá com `"built": true`.
+>
+> O Yarn também recusa versões publicadas há menos de 1 dia (`npmMinimalAgeGate`). Se um
+> `yarn add` falhar com "quarantined", use uma versão um pouco anterior.
 
 ## Rodando
 
 ```bash
-npm run dev
+yarn dev
 ```
 
 Sobe frontend e backend juntos:
@@ -51,15 +60,15 @@ O Vite faz proxy de `/api` para o backend, então o frontend chama apenas `/api/
 Também é possível subir cada um separadamente:
 
 ```bash
-npm run dev:backend
-npm run dev:frontend
+yarn dev:backend
+yarn dev:frontend
 ```
 
 ## Prisma
 
 ```bash
-npm run prisma:migrate   # cria/aplica migrations (prisma migrate dev)
-npm run prisma:studio    # abre o Prisma Studio no navegador
+yarn prisma:migrate   # cria/aplica migrations (prisma migrate dev)
+yarn prisma:studio    # abre o Prisma Studio no navegador
 ```
 
 O banco SQLite fica em `backend/dev.db`.

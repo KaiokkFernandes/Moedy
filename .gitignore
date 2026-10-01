@@ -160,3 +160,8 @@ backend/src/generated/
 
 # Editor / SO
 .DS_Store
+
+# Yarn (Berry) — versiona só a release e a config
+.yarn/*
+!.yarn/releases
+.pnp.*
