@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // Valores monetários (saldoInicial, valor, valorLimite) são sempre guardados em centavos (Int).
@@ -86,7 +86,7 @@ model Transaction {
   account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  // Evita duplicatas na importação (no SQLite, vários externalId nulos não conflitam).
+  // Evita duplicatas na importação (vários externalId nulos não conflitam).
   @@unique([accountId, externalId])
   @@index([accountId, data])
   @@index([categoryId])

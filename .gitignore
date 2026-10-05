@@ -151,10 +151,6 @@ dist/
 .env.*
 !.env.example
 
-# Banco SQLite local
-*.db
-*.db-journal
-
 # Prisma Client gerado (recriado por `prisma generate` / postinstall)
 backend/src/generated/
 

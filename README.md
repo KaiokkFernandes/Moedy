@@ -3,11 +3,12 @@
 App de finanças pessoais em monorepo (Yarn workspaces):
 
 - **frontend/** — React + TypeScript + Vite + Tailwind CSS
-- **backend/** — Node.js + Express + TypeScript + Prisma (SQLite)
+- **backend/** — Node.js + Express + TypeScript + Prisma (PostgreSQL)
 
 ## Requisitos
 
 - Node.js **20+**
+- PostgreSQL 14+ (veja abaixo)
 - Yarn (qualquer versão; o projeto fixa o **Yarn 4.18.1** em `.yarn/releases`)
 
 Se ainda não tiver o Yarn instalado:
@@ -17,6 +18,26 @@ npm install -g yarn
 ```
 
 O binário global só delega para a versão do projeto, então `yarn --version` dentro da pasta mostra `4.18.1`.
+
+## Banco de dados (PostgreSQL)
+
+O projeto usa PostgreSQL. No macOS, com Homebrew:
+
+```bash
+brew install postgresql@18
+brew services start postgresql@18
+```
+
+Crie o usuário e o banco de desenvolvimento (os mesmos do `backend/.env.example`):
+
+```bash
+/opt/homebrew/opt/postgresql@18/bin/psql -d postgres \
+  -c "CREATE ROLE moedy LOGIN PASSWORD 'moedy' CREATEDB;" \
+  -c "CREATE DATABASE moedy OWNER moedy;"
+```
+
+O `CREATEDB` é necessário porque o `prisma migrate dev` cria um banco temporário para comparar as migrations.
+Para parar o serviço: `brew services stop postgresql@18`.
 
 ## Instalação
 
@@ -43,7 +64,7 @@ O `yarn seed` cria o usuário de teste definido no `backend/.env` (pode rodar ma
 | `teste@moedy.dev` | `teste12345` |
 
 > O Yarn 4 bloqueia scripts de build de dependências por padrão. Os pacotes que precisam deles
-> (Prisma, better-sqlite3, esbuild) estão liberados em `dependenciesMeta` no `package.json` da raiz.
+> (Prisma, esbuild) estão liberados em `dependenciesMeta` no `package.json` da raiz.
 > Se surgir outra dependência nativa, adicione-a lá com `"built": true`.
 >
 > O Yarn também recusa versões publicadas há menos de 1 dia (`npmMinimalAgeGate`). Se um
@@ -81,14 +102,15 @@ yarn seed             # cria/atualiza o usuário de teste e as categorias padrã
 
 Valores monetários são sempre guardados em **centavos** (inteiros), nunca em ponto flutuante.
 
-O banco SQLite fica em `backend/dev.db`.
+Para abrir o banco em um cliente como o Beekeeper Studio, crie uma conexão **Postgres** com host `localhost`,
+porta `5432`, usuário `moedy`, senha `moedy` e banco `moedy`.
 
 ## Variáveis de ambiente (backend/.env)
 
 | Variável       | Exemplo                            |
 | -------------- | ---------------------------------- |
 | `PORT`         | `3333`                             |
-| `DATABASE_URL` | `file:./dev.db`                    |
+| `DATABASE_URL` | `postgresql://moedy:moedy@localhost:5432/moedy?schema=public` |
 | `JWT_SECRET`   | `troque-este-segredo-em-producao`  |
 | `SEED_USER_NOME` / `SEED_USER_EMAIL` / `SEED_USER_SENHA` | usuário de teste do seed |
 

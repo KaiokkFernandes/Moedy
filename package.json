@@ -27,9 +27,6 @@
     "@prisma/engines": {
       "built": true
     },
-    "better-sqlite3": {
-      "built": true
-    },
     "esbuild": {
       "built": true
     },
