@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/AppLayout'
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/RouteGuards'
 import { Categorias } from '@/pages/Categorias'
+import { Configuracoes } from '@/pages/Configuracoes'
 import { Contas } from '@/pages/Contas'
 import { Importar } from '@/pages/Importar'
 import { Login } from '@/pages/Login'
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/contas" element={<Contas />} />
           <Route path="/categorias" element={<Categorias />} />
           <Route path="/regras" element={<Regras />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="/importar" element={<Importar />} />
         </Route>
       </Route>

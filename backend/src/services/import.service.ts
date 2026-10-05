@@ -6,7 +6,8 @@ import { prisma } from "../lib/prisma.js";
 import { normalizeText } from "../lib/text.js";
 import { AppError } from "../middlewares/errorHandler.js";
 import type { ConfirmInput, CsvMappingInput } from "../schemas/import.schema.js";
-import { getMatcher } from "./categoryRule.service.js";
+import { remember } from "./categoryMemory.service.js";
+import { suggestCategories, type IaStatus, type OrigemSugestao } from "./categorization.service.js";
 
 interface UploadedFile {
   originalname: string;
@@ -35,25 +36,51 @@ async function assertAccountOwned(userId: string, accountId: string) {
   }
 }
 
-/** Monta a revisão: sugere categorias pelas regras e marca o que já existe na conta. */
-async function buildReview(userId: string, accountId: string, formato: "ofx" | "csv", parsed: ParseResult) {
-  const [match, existing] = await Promise.all([
-    getMatcher(userId),
-    prisma.transaction.findMany({
-      where: { accountId, externalId: { in: parsed.itens.map((item) => item.externalId) } },
-      select: { externalId: true },
-    }),
-  ]);
+/**
+ * Monta a revisão: sugere categorias (regras, memória e, se ligada, IA) e marca o que já existe
+ * na conta. Duplicadas não são categorizadas: não vão para a IA nem gastam chamadas.
+ */
+async function buildReview(
+  userId: string,
+  accountId: string,
+  formato: "ofx" | "csv",
+  parsed: ParseResult,
+  usarIa: boolean,
+) {
+  const existing = await prisma.transaction.findMany({
+    where: { accountId, externalId: { in: parsed.itens.map((item) => item.externalId) } },
+    select: { externalId: true },
+  });
   const existingIds = new Set(existing.map((transaction) => transaction.externalId));
 
-  const itens = parsed.itens.map((item) => ({
-    ...item,
-    categoryId: match(item.descricao, item.tipo),
-    // Só uma sugestão: o usuário confirma ou desmarca na revisão
-    ignorarNosRelatorios: looksLikeTransfer(item.descricao),
-    duplicada: existingIds.has(item.externalId),
-  }));
-  const duplicadas = itens.filter((item) => item.duplicada).length;
+  const pendentes = parsed.itens
+    .map((item, indice) => ({ item, indice }))
+    .filter(({ item }) => !existingIds.has(item.externalId));
+
+  const { sugestoes, ia } = await suggestCategories(
+    userId,
+    pendentes.map(({ item, indice }) => ({ indice, descricao: item.descricao, valor: item.valor, tipo: item.tipo })),
+    { usarIa },
+  );
+
+  const itens = parsed.itens.map((item, indice) => {
+    const sugestao = sugestoes.get(indice);
+    return {
+      ...item,
+      categoryId: sugestao?.categoryId ?? null,
+      origemCategoria: (sugestao?.origem ?? null) as OrigemSugestao | null,
+      confianca: sugestao?.confianca ?? null,
+      // Só uma sugestão: o usuário confirma ou desmarca na revisão
+      ignorarNosRelatorios: looksLikeTransfer(item.descricao),
+      duplicada: existingIds.has(item.externalId),
+    };
+  });
+
+  const novas = itens.filter((item) => !item.duplicada);
+  const porOrigem: Record<OrigemSugestao, number> = { REGRA: 0, MEMORIA: 0, IA: 0 };
+  for (const item of novas) {
+    if (item.origemCategoria) porOrigem[item.origemCategoria] += 1;
+  }
 
   return {
     formato,
@@ -62,9 +89,18 @@ async function buildReview(userId: string, accountId: string, formato: "ofx" | "
     erros: parsed.erros,
     resumo: {
       total: itens.length + parsed.erros.length,
-      novas: itens.length - duplicadas,
-      duplicadas,
+      novas: novas.length,
+      duplicadas: itens.length - novas.length,
       comErro: parsed.erros.length,
+      /** Quantas das novas receberam categoria de cada origem. */
+      porOrigem,
+      semCategoria: novas.filter((item) => !item.categoryId).length,
+    },
+    ia: {
+      status: ia.status as IaStatus,
+      motivo: ia.motivo,
+      enviadas: ia.enviadas,
+      naoEnviadas: ia.naoEnviadas,
     },
   };
 }
@@ -81,9 +117,12 @@ export async function preview(userId: string, accountId: string, file: UploadedF
     throw new AppError("O arquivo está vazio", 400);
   }
 
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { usarIaImportacao: true } });
+  const usarIa = user?.usarIaImportacao ?? false;
+
   try {
     if (file.originalname.toLowerCase().endsWith(".ofx")) {
-      return await buildReview(userId, accountId, "ofx", parseOfx(text));
+      return await buildReview(userId, accountId, "ofx", parseOfx(text), usarIa);
     }
 
     const table = readCsv(text);
@@ -106,7 +145,7 @@ export async function preview(userId: string, accountId: string, file: UploadedF
       throw new ImportFileError("O mapeamento aponta para uma coluna que não existe no arquivo");
     }
 
-    return await buildReview(userId, accountId, "csv", parseCsv(table, mapeamento));
+    return await buildReview(userId, accountId, "csv", parseCsv(table, mapeamento), usarIa);
   } catch (error) {
     if (error instanceof ImportFileError) {
       throw new AppError(error.message, 400);
@@ -143,10 +182,25 @@ export async function confirm(userId: string, { accountId, itens }: ConfirmInput
   const created = await prisma.$transaction((tx) =>
     tx.transaction.createManyAndReturn({
       skipDuplicates: true,
-      data: itens.map((item) => ({ ...item, accountId })),
+      data: itens.map(({ origemCategoria, ...item }) => ({
+        ...item,
+        accountId,
+        origemCategoria: origemCategoria ?? "MANUAL",
+      })),
       select: { id: true },
     }),
   );
+
+  // A categoria confirmada pelo usuário vira memória, para as próximas importações. Não é
+  // essencial para a importação: se falhar, só fica registrado.
+  try {
+    await remember(
+      userId,
+      itens.flatMap((item) => (item.categoryId ? [{ descricao: item.descricao, tipo: item.tipo, categoryId: item.categoryId }] : [])),
+    );
+  } catch (error) {
+    console.warn("[memoria-categorias] não foi possível gravar a memória da importação", error instanceof Error ? error.name : "");
+  }
 
   return {
     importadas: created.length,

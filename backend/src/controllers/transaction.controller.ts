@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { idParamSchema } from "../schemas/common.schema.js";
 import {
   listTransactionsQuerySchema,
+  suggestCategoriesQuerySchema,
   transactionCategorySchema,
   transactionSchema,
 } from "../schemas/transaction.schema.js";
@@ -30,10 +31,15 @@ export const update: RequestHandler = async (req, res) => {
 
 export const updateCategory: RequestHandler = async (req, res) => {
   const { id } = idParamSchema.parse(req.params);
-  const { categoryId } = transactionCategorySchema.parse(req.body);
-  const transaction = await transactionService.updateCategory(req.userId, id, categoryId);
+  const { categoryId, origem } = transactionCategorySchema.parse(req.body);
+  const transaction = await transactionService.updateCategory(req.userId, id, categoryId, origem);
   await checkAlertsSafely(req.userId, [transaction.id]);
   res.json(transaction);
+};
+
+export const suggestCategories: RequestHandler = async (req, res) => {
+  const query = suggestCategoriesQuerySchema.parse(req.body ?? {});
+  res.json(await transactionService.suggestForUncategorized(req.userId, query));
 };
 
 export const remove: RequestHandler = async (req, res) => {

@@ -27,6 +27,19 @@ export interface CsvMapping {
   saida?: number
 }
 
+/** De onde veio a categoria: escolha manual, regra, memória de escolhas anteriores ou IA. */
+export type OrigemCategoria = 'MANUAL' | 'REGRA' | 'MEMORIA' | 'IA'
+export type Confianca = 'ALTA' | 'MEDIA' | 'BAIXA'
+/** DESLIGADA: IA desligada pelo usuário. SEM_CHAVE: o servidor não tem a chave. */
+export type IaStatus = 'DESLIGADA' | 'SEM_CHAVE' | 'OK' | 'PARCIAL' | 'FALHOU'
+
+export interface IaSummary {
+  status: IaStatus
+  motivo: string | null
+  enviadas: number
+  naoEnviadas: number
+}
+
 export interface ImportItem {
   linha: number
   /** AAAA-MM-DD */
@@ -36,8 +49,12 @@ export interface ImportItem {
   valor: number
   tipo: TransactionType
   externalId: string
-  /** Categoria sugerida pelas regras (ou escolhida pelo usuário na revisão). */
+  /** Categoria sugerida (ou escolhida pelo usuário na revisão). */
   categoryId: string | null
+  /** Origem da categoria atual; `null` quando não há categoria. */
+  origemCategoria: OrigemCategoria | null
+  /** Confiança da IA (só quando a origem é IA). */
+  confianca: Confianca | null
   /** Sugerido pela API para pagamentos de fatura e transferências; o usuário pode mudar na revisão. */
   ignorarNosRelatorios: boolean
   /** Já existe na conta de destino. */
@@ -60,7 +77,16 @@ export interface ImportReview {
   etapa: 'revisao'
   itens: ImportItem[]
   erros: { linha: number; motivo: string }[]
-  resumo: { total: number; novas: number; duplicadas: number; comErro: number }
+  resumo: {
+    total: number
+    novas: number
+    duplicadas: number
+    comErro: number
+    /** Novas com categoria, por origem. */
+    porOrigem: Record<Exclude<OrigemCategoria, 'MANUAL'>, number>
+    semCategoria: number
+  }
+  ia: IaSummary
 }
 
 export type ImportPreview = CsvMappingStep | ImportReview

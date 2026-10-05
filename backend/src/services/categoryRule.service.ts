@@ -76,7 +76,10 @@ export async function applyToUncategorized(userId: string) {
   const results = await prisma.$transaction(
     [...idsByCategory].map(([categoryId, ids]) =>
       // Repete o filtro "sem categoria" para não sobrescrever algo categorizado nesse meio-tempo
-      prisma.transaction.updateMany({ where: { id: { in: ids }, categoryId: null }, data: { categoryId } }),
+      prisma.transaction.updateMany({
+        where: { id: { in: ids }, categoryId: null },
+        data: { categoryId, origemCategoria: "REGRA" },
+      }),
     ),
   );
 

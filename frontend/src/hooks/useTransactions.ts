@@ -24,8 +24,8 @@ export function useSaveTransaction() {
 export function useUpdateTransactionCategory() {
   const invalidate = useInvalidateFinance()
   return useMutation({
-    mutationFn: ({ id, categoryId }: { id: string; categoryId: string | null }) =>
-      transactionsService.updateCategory(id, categoryId),
+    mutationFn: ({ id, categoryId, origem }: { id: string; categoryId: string | null; origem?: "MANUAL" | "IA" }) =>
+      transactionsService.updateCategory(id, categoryId, origem),
     onSuccess: invalidate,
   })
 }

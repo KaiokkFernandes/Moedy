@@ -1,7 +1,10 @@
 import type { Prisma, TransactionType } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../middlewares/errorHandler.js";
-import type { ListTransactionsQuery, TransactionInput } from "../schemas/transaction.schema.js";
+import { aiConfig } from "./ai/index.js";
+import { suggestCategories } from "./categorization.service.js";
+import { remember } from "./categoryMemory.service.js";
+import type { ListTransactionsQuery, SuggestCategoriesQuery, TransactionInput } from "../schemas/transaction.schema.js";
 
 export const transactionInclude = {
   category: { select: { id: true, nome: true, cor: true, icone: true } },
@@ -19,7 +22,7 @@ export function serializeTransaction(transaction: TransactionWithRelations) {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function buildWhere(userId: string, query: ListTransactionsQuery): Prisma.TransactionWhereInput {
+export function buildWhere(userId: string, query: ListTransactionsQuery): Prisma.TransactionWhereInput {
   const { dataInicio, dataFim, accountId, categoryId, tipo, busca, semCategoria } = query;
 
   return {
@@ -105,7 +108,7 @@ export async function create(userId: string, input: TransactionInput) {
   await assertAccountOwned(userId, input.accountId);
   await assertCategoryMatches(userId, input.categoryId, input.tipo);
 
-  return serializeTransaction(await prisma.transaction.create({ data: input, include }));
+  return serializeTransaction(await prisma.transaction.create({ data: { ...input, origemCategoria: "MANUAL" }, include }));
 }
 
 export async function update(userId: string, id: string, input: TransactionInput) {
@@ -113,14 +116,94 @@ export async function update(userId: string, id: string, input: TransactionInput
   await assertAccountOwned(userId, input.accountId);
   await assertCategoryMatches(userId, input.categoryId, input.tipo);
 
-  return serializeTransaction(await prisma.transaction.update({ where: { id }, data: input, include }));
+  const updated = await prisma.transaction.update({ where: { id }, data: { ...input, origemCategoria: "MANUAL" }, include });
+  await rememberCategory(userId, updated);
+  return serializeTransaction(updated);
 }
 
-export async function updateCategory(userId: string, id: string, categoryId: string | null) {
+export async function updateCategory(
+  userId: string,
+  id: string,
+  categoryId: string | null,
+  origem: "MANUAL" | "REGRA" | "MEMORIA" | "IA" = "MANUAL",
+) {
   const transaction = await findOwned(userId, id);
   await assertCategoryMatches(userId, categoryId, transaction.tipo);
 
-  return serializeTransaction(await prisma.transaction.update({ where: { id }, data: { categoryId }, include }));
+  const updated = await prisma.transaction.update({
+    where: { id },
+    data: { categoryId, origemCategoria: origem },
+    include,
+  });
+  await rememberCategory(userId, updated);
+  return serializeTransaction(updated);
+}
+
+/** A escolha do usuário vira memória para as próximas importações. Falha aqui não desfaz a edição. */
+async function rememberCategory(
+  userId: string,
+  transaction: { descricao: string; tipo: TransactionType; categoryId: string | null },
+) {
+  if (!transaction.categoryId) return;
+  try {
+    await remember(userId, [{ descricao: transaction.descricao, tipo: transaction.tipo, categoryId: transaction.categoryId }]);
+  } catch (error) {
+    console.warn("[memoria-categorias] não foi possível gravar a escolha", error instanceof Error ? error.name : "");
+  }
+}
+
+/**
+ * Sugestões de categoria para as transações sem categoria que cabem no filtro. Não grava nada:
+ * a tela de revisão decide o que aplicar. Exige a preferência de IA ligada.
+ */
+export async function suggestForUncategorized(userId: string, query: SuggestCategoriesQuery) {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { usarIaImportacao: true } });
+  if (!user?.usarIaImportacao) {
+    throw new AppError("Ative a IA em Configurações para sugerir categorias", 409);
+  }
+
+  const where = buildWhere(userId, { ...query, categoryId: undefined, semCategoria: true, page: 1, pageSize: 1 });
+  const [rows, total] = await Promise.all([
+    prisma.transaction.findMany({
+      where,
+      select: { id: true, descricao: true, valor: true, tipo: true, data: true },
+      orderBy: [{ data: "desc" }, { id: "asc" }],
+      take: aiConfig().maxTransacoes,
+    }),
+    prisma.transaction.count({ where }),
+  ]);
+
+  const result = await suggestCategories(
+    userId,
+    rows.map((row, indice) => ({ indice, descricao: row.descricao, valor: row.valor, tipo: row.tipo })),
+    { usarIa: true },
+  );
+
+  const itens = rows.flatMap((row, indice) => {
+    const sugestao = result.sugestoes.get(indice);
+    if (!sugestao) return [];
+    return [
+      {
+        transactionId: row.id,
+        descricao: row.descricao,
+        valor: row.valor,
+        tipo: row.tipo,
+        data: row.data.toISOString().slice(0, 10),
+        categoryId: sugestao.categoryId,
+        origem: sugestao.origem,
+        confianca: sugestao.confianca,
+      },
+    ];
+  });
+
+  return {
+    itens,
+    semSugestao: rows.length - itens.length,
+    total,
+    /** Quantas sem categoria ficaram de fora por causa do limite por pedido. */
+    naoAnalisadas: total - rows.length,
+    ia: result.ia,
+  };
 }
 
 export async function remove(userId: string, id: string) {

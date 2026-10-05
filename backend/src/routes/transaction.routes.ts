@@ -8,6 +8,7 @@ transactionRoutes.use(authenticate);
 
 transactionRoutes.get("/", transactionController.list);
 transactionRoutes.post("/", transactionController.create);
+transactionRoutes.post("/suggest-categories", transactionController.suggestCategories);
 transactionRoutes.put("/:id", transactionController.update);
 transactionRoutes.delete("/:id", transactionController.remove);
 transactionRoutes.patch("/:id/category", transactionController.updateCategory);

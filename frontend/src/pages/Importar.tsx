@@ -5,11 +5,14 @@ import { Check, CircleCheck, Landmark } from 'lucide-react'
 import { ColumnMapping } from '@/components/import/ColumnMapping'
 import { FileDropzone } from '@/components/import/FileDropzone'
 import { ImportReview } from '@/components/import/ImportReview'
+import { RuleSuggestions } from '@/components/import/RuleSuggestions'
+import { AiNotice } from '@/components/categorizacao/AiNotice'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { EmptyState, ErrorState, Loading } from '@/components/ui/States'
 import { useAccounts } from '@/hooks/useAccounts'
+import { useAiSettings } from '@/hooks/useAi'
 import { useCategories } from '@/hooks/useCategories'
 import { useImportConfirm, useImportPreview } from '@/hooks/useImport'
 import { getErrorMessage } from '@/lib/api'
@@ -22,7 +25,7 @@ type Step =
   | { name: 'arquivo' }
   | { name: 'colunas'; mapping: CsvMappingStep; chosen?: CsvMapping }
   | { name: 'revisao'; review: ImportReviewData; mapping?: CsvMappingStep; chosen?: CsvMapping }
-  | { name: 'concluido'; result: ImportResult }
+  | { name: 'concluido'; result: ImportResult; aceitos: ImportItem[] }
 
 /** Checagens rápidas antes de enviar; a API valida tudo de novo. */
 function validateFile(file: File) {
@@ -68,6 +71,8 @@ export function Importar() {
   const categories = useCategories()
   const preview = useImportPreview()
   const confirm = useImportConfirm()
+  const ai = useAiSettings()
+  const usarIa = ai.data?.usarIaImportacao ?? false
   const [step, setStep] = useState<Step>({ name: 'arquivo' })
   const [accountId, setAccountId] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -150,7 +155,10 @@ export function Importar() {
 
   async function importItems(itens: ImportItem[]) {
     try {
-      setStep({ name: 'concluido', result: await confirm.mutateAsync({ accountId: destino.id, itens }) })
+      const result = await confirm.mutateAsync({ accountId: destino.id, itens })
+      // As sugestões da IA que o usuário aceitou são as candidatas a virar regra
+      const aceitos = itens.filter((item) => item.origemCategoria === 'IA' && item.categoryId)
+      setStep({ name: 'concluido', result, aceitos })
     } catch {
       // O erro aparece na revisão
     }
@@ -192,7 +200,7 @@ export function Importar() {
 
           <div className="flex justify-end">
             <Button onClick={() => readFile()} loading={preview.isPending} disabled={Boolean(fileError)}>
-              Ler arquivo
+              {preview.isPending && usarIa ? 'Lendo e sugerindo categorias…' : 'Ler arquivo'}
             </Button>
           </div>
         </div>
@@ -218,6 +226,7 @@ export function Importar() {
             Confira as transações de <strong className="text-slate-900">{file?.name}</strong> que entrarão na conta{' '}
             <strong className="text-slate-900">{destino.nome}</strong>. Nada foi gravado ainda.
           </p>
+          <AiNotice ia={step.review.ia} />
           <ImportReview
             data={step.review}
             categories={categories.data}
@@ -262,6 +271,12 @@ export function Importar() {
               Importar outro arquivo
             </Button>
           </div>
+        </div>
+      )}
+
+      {step.name === 'concluido' && step.aceitos.length > 0 && (
+        <div className="mt-6 max-w-2xl">
+          <RuleSuggestions itens={step.aceitos} categories={categories.data} />
         </div>
       )}
     </>

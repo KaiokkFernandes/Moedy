@@ -200,6 +200,29 @@ lido ou excluído:
 | Nova cobrança recorrente | Uma cobrança completa 3 meses seguidos |
 | Recorrente mudou de valor | Diferença de mais de 5% em relação à última cobrança |
 
+## Categorização por IA (opcional)
+
+Na importação, cada lançamento recebe a categoria nesta ordem: **regras** do usuário, **memória** das escolhas
+anteriores e, só para o que sobrou, a **IA** (API da Anthropic, modelo `claude-haiku-4-5-20251001` por padrão).
+A IA apenas sugere; nada é gravado sem a revisão.
+
+- **Chave:** `ANTHROPIC_API_KEY` no `backend/.env`. Sem ela, a importação segue normalmente e o preview avisa que a IA
+  não está disponível. A chave nunca vai para o frontend nem para os logs.
+- **Preferência:** desligada por padrão. Em **Configurações** ela só liga depois de o usuário aceitar o aviso de envio
+  (o servidor exige a confirmação). Enviamos à API somente descrição, valor e tipo de cada lançamento, sem nome, e-mail,
+  conta, saldo ou identificadores do banco.
+- **Economia:** descrições iguais (depois de normalizadas) são classificadas uma vez só, em lotes de 50, com até 3 lotes
+  em paralelo. Duplicadas nem são enviadas. Cada chamada tem tempo limite (`AI_TIMEOUT_MS`) e até 2 novas tentativas
+  em erros temporários; no máximo `AI_MAX_TRANSACTIONS` lançamentos por importação.
+- **Validação:** cada resposta é conferida com Zod. Categoria que não é do usuário ou de tipo diferente do lançamento
+  é descartada; confiança BAIXA fica sem categoria.
+- **Memória:** a categoria confirmada pelo usuário é lembrada pela descrição normalizada (sem acento, parcela ou código).
+  Uma escolha manual sempre substitui a anterior.
+- **Origem:** cada transação guarda de onde veio a categoria (`MANUAL`, `REGRA`, `MEMORIA`, `IA`).
+- **Trocar de provedor:** a integração fica em `backend/src/services/ai/`, atrás da interface `Categorizer`.
+
+Trocar a variável `AI_MODEL` muda o modelo sem mexer no código.
+
 ## Importação de extrato (OFX e CSV)
 
 A importação tem duas etapas, para o usuário revisar antes de gravar:

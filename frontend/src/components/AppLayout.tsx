@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Settings,
   Tags,
   Target,
   Upload,
@@ -27,6 +28,7 @@ const NAV_LINKS = [
   { to: '/contas', label: 'Contas', icon: Landmark },
   { to: '/categorias', label: 'Categorias', icon: Tags },
   { to: '/regras', label: 'Regras', icon: WandSparkles },
+  { to: '/configuracoes', label: 'Configurações', icon: Settings },
   { to: '/importar', label: 'Importar', icon: Upload },
 ]
 

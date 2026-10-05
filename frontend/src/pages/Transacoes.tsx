@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { ArrowLeftRight, Landmark, Plus } from 'lucide-react'
+import { ArrowLeftRight, Landmark, Plus, Sparkles } from 'lucide-react'
+import { SugestoesIaModal } from '@/components/transactions/SugestoesIaModal'
 import { PageHeader } from '@/components/PageHeader'
 import { RuleFormModal, type RuleSavedResult } from '@/components/rules/RuleFormModal'
 import { TransactionFilters } from '@/components/transactions/TransactionFilters'
@@ -48,6 +49,7 @@ export function Transacoes() {
   const deleteTransaction = useDeleteTransaction()
   const [form, setForm] = useState<FormState>(null)
   const [deleting, setDeleting] = useState<Transaction | null>(null)
+  const [sugerindo, setSugerindo] = useState(false)
   const rules = useCategoryRules()
   const [notice, setNotice] = useState<Notice>(null)
   const [ruleDefaults, setRuleDefaults] = useState<{ palavraChave: string; categoryId: string } | null>(null)
@@ -142,6 +144,13 @@ export function Transacoes() {
     )
   }
 
+  const aiButton = (
+    <Button variant="secondary" onClick={() => setSugerindo(true)}>
+      <Sparkles className="size-4" aria-hidden />
+      Sugerir categorias com IA
+    </Button>
+  )
+
   const newButton = (
     <Button onClick={() => setForm({})}>
       <Plus className="size-4" aria-hidden />
@@ -153,7 +162,15 @@ export function Transacoes() {
 
   return (
     <>
-      <PageHeader title="Transações" action={newButton} />
+      <PageHeader
+        title="Transações"
+        action={
+          <div className="flex flex-wrap gap-2">
+            {aiButton}
+            {newButton}
+          </div>
+        }
+      />
 
       <TransactionFilters filters={filters} accounts={accounts.data} categories={categories.data} />
 
@@ -202,6 +219,8 @@ export function Transacoes() {
           )}
         </div>
       )}
+
+      <SugestoesIaModal open={sugerindo} onClose={() => setSugerindo(false)} filters={filters.apiFilters} categories={categories.data} />
 
       <TransactionFormModal
         open={form !== null}

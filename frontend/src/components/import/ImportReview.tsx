@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { EyeOff } from 'lucide-react'
 import { CategoryPillSelect } from '@/components/categories/CategoryPillSelect'
+import { OrigemBadge } from '@/components/categorizacao/OrigemBadge'
 import { FormAlert } from '@/components/FormAlert'
 import { Button } from '@/components/ui/Button'
 import { formatCurrency, formatDate, pluralize } from '@/lib/format'
 import type { Category } from '@/types/finance'
-import type { ImportItem, ImportReview as ImportReviewData } from '@/types/import'
+import type { ImportItem, ImportReview as ImportReviewData, OrigemCategoria } from '@/types/import'
 
 interface ImportReviewProps {
   data: ImportReviewData
@@ -14,9 +15,17 @@ interface ImportReviewProps {
   loading: boolean
   error: string
   onBack: () => void
-  /** Recebe só as transações marcadas, já com as categorias ajustadas. */
+  /** Recebe só as transações marcadas, já com as categorias e origens ajustadas. */
   onConfirm: (itens: ImportItem[]) => void
 }
+
+type Filtro = 'todas' | 'ia' | 'sem'
+
+const FILTROS: { id: Filtro; label: string }[] = [
+  { id: 'todas', label: 'Todas' },
+  { id: 'ia', label: 'Sugeridas por IA' },
+  { id: 'sem', label: 'Sem categoria' },
+]
 
 function SummaryCard({ label, value, className }: { label: string; value: number; className?: string }) {
   return (
@@ -37,11 +46,33 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
   const [categoryById, setCategoryById] = useState<Record<string, string | null>>(() =>
     Object.fromEntries(itens.map((item) => [item.externalId, item.categoryId])),
   )
+  // Origem atual de cada categoria. Quando o usuário troca a categoria, a origem vira "MANUAL".
+  const [origemById, setOrigemById] = useState<Record<string, OrigemCategoria | null>>(() =>
+    Object.fromEntries(itens.map((item) => [item.externalId, item.origemCategoria])),
+  )
+  const [filtro, setFiltro] = useState<Filtro>('todas')
 
   // Começa com a sugestão da API (pagamento de fatura, transferência entre contas)
   const [ignored, setIgnored] = useState(
     () => new Set(itens.filter((item) => item.ignorarNosRelatorios).map((item) => item.externalId)),
   )
+
+  // Contagem por origem acompanha as edições do usuário (não só a leitura original)
+  const contagem = useMemo(() => {
+    const counts = { REGRA: 0, MEMORIA: 0, IA: 0, sem: 0 }
+    for (const item of novas) {
+      const origem = origemById[item.externalId]
+      if (categoryById[item.externalId] && origem && origem !== 'MANUAL') counts[origem] += 1
+      if (!categoryById[item.externalId]) counts.sem += 1
+    }
+    return counts
+  }, [novas, origemById, categoryById])
+
+  const visiveis = useMemo(() => {
+    if (filtro === 'todas') return itens
+    if (filtro === 'ia') return itens.filter((item) => !item.duplicada && origemById[item.externalId] === 'IA')
+    return itens.filter((item) => !item.duplicada && !categoryById[item.externalId])
+  }, [itens, filtro, origemById, categoryById])
 
   const allSelected = selected.size === novas.length && novas.length > 0
   const selectAllRef = useRef<HTMLInputElement>(null)
@@ -67,6 +98,12 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
     })
   }
 
+  function changeCategory(externalId: string, categoryId: string | null) {
+    setCategoryById((prev) => ({ ...prev, [externalId]: categoryId }))
+    // Escolha feita à mão na revisão: não é mais sugestão da regra, da memória nem da IA
+    setOrigemById((prev) => ({ ...prev, [externalId]: categoryId ? 'MANUAL' : null }))
+  }
+
   function handleConfirm() {
     onConfirm(
       novas
@@ -74,6 +111,7 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
         .map((item) => ({
           ...item,
           categoryId: categoryById[item.externalId] ?? null,
+          origemCategoria: categoryById[item.externalId] ? (origemById[item.externalId] ?? 'MANUAL') : null,
           ignorarNosRelatorios: ignored.has(item.externalId),
         })),
     )
@@ -87,6 +125,23 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
         <SummaryCard label="Duplicadas" value={resumo.duplicadas} className="text-slate-500" />
         <SummaryCard label="Com erro" value={resumo.comErro} className={resumo.comErro > 0 ? 'text-red-600' : 'text-slate-500'} />
       </div>
+
+      {novas.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-white px-5 py-3 text-sm text-slate-700 ring-1 ring-slate-200">
+          <span>
+            Categorizadas por regra: <strong className="text-slate-900">{contagem.REGRA}</strong>
+          </span>
+          <span>
+            por memória: <strong className="text-slate-900">{contagem.MEMORIA}</strong>
+          </span>
+          <span>
+            por IA: <strong className="text-slate-900">{contagem.IA}</strong>
+          </span>
+          <span className={clsx(contagem.sem > 0 && 'font-medium text-amber-800')}>
+            sem categoria: <strong>{contagem.sem}</strong>
+          </span>
+        </div>
+      )}
 
       {erros.length > 0 && (
         <details className="rounded-2xl bg-red-50 px-5 py-3 text-sm text-red-800">
@@ -114,98 +169,126 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
 
       {itens.length > 0 && (
         <section aria-label="Transações encontradas" className="rounded-2xl bg-white ring-1 ring-slate-200">
-          <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3">
-            <input
-              ref={selectAllRef}
-              type="checkbox"
-              aria-label="Selecionar todas as novas"
-              checked={allSelected}
-              disabled={novas.length === 0}
-              onChange={() => setSelected(allSelected ? new Set() : new Set(novas.map((item) => item.externalId)))}
-              className="size-4 rounded border-slate-300 accent-emerald-600"
-            />
-            <p className="text-sm font-medium text-slate-900">
-              {selected.size} de {pluralize(novas.length, 'nova selecionada', 'novas selecionadas')}
-            </p>
-          </div>
-
-          <ul className="divide-y divide-slate-100">
-            {itens.map((item) => {
-              const receita = item.tipo === 'RECEITA'
-              return (
-                <li
-                  key={item.externalId}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <input
+                ref={selectAllRef}
+                type="checkbox"
+                aria-label="Selecionar todas as novas"
+                checked={allSelected}
+                disabled={novas.length === 0}
+                onChange={() => setSelected(allSelected ? new Set() : new Set(novas.map((item) => item.externalId)))}
+                className="size-4 rounded border-slate-300 accent-emerald-600"
+              />
+              <p className="text-sm font-medium text-slate-900">
+                {selected.size} de {pluralize(novas.length, 'nova selecionada', 'novas selecionadas')}
+              </p>
+            </div>
+            <div role="group" aria-label="Filtrar transações" className="flex flex-wrap gap-1">
+              {FILTROS.map((opcao) => (
+                <button
+                  key={opcao.id}
+                  type="button"
+                  aria-pressed={filtro === opcao.id}
+                  onClick={() => setFiltro(opcao.id)}
                   className={clsx(
-                    'grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 md:grid-cols-[auto_6rem_1fr_12rem_auto_8rem]',
-                    item.duplicada && 'bg-slate-50 opacity-50',
+                    'rounded-full px-3 py-1 text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
+                    filtro === opcao.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
                   )}
                 >
-                  <input
-                    type="checkbox"
-                    aria-label={`Importar ${item.descricao}`}
-                    checked={selected.has(item.externalId)}
-                    disabled={item.duplicada}
-                    onChange={() => toggle(item.externalId)}
-                    className="col-start-1 row-start-1 size-4 rounded border-slate-300 accent-emerald-600"
-                  />
-                  <span className="hidden text-sm whitespace-nowrap text-slate-600 tabular-nums md:col-start-2 md:row-start-1 md:block">
-                    {formatDate(item.data)}
-                  </span>
-                  <div className="col-start-2 row-start-1 min-w-0 md:col-start-3">
-                    <p className="truncate text-sm font-medium text-slate-900" title={item.descricao}>
-                      {item.descricao}
-                      {item.duplicada && (
-                        <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
-                          Duplicada
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      <span className="md:hidden">{formatDate(item.data)}</span>
-                      {ignored.has(item.externalId) && (
-                        <span className="font-medium text-slate-600">
-                          <span className="md:hidden"> · </span>Fora dos relatórios
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="col-start-2 row-start-2 min-w-0 md:col-start-4 md:row-start-1">
-                    <CategoryPillSelect
-                      label={`Categoria de ${item.descricao}`}
-                      value={categoryById[item.externalId] ?? null}
-                      onChange={(categoryId) => setCategoryById((prev) => ({ ...prev, [item.externalId]: categoryId }))}
-                      options={categories.filter((category) => category.tipo === item.tipo)}
+                  {opcao.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {visiveis.length === 0 ? (
+            <p className="px-4 py-8 text-center text-sm text-slate-500">Nenhuma transação neste filtro.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {visiveis.map((item) => {
+                const receita = item.tipo === 'RECEITA'
+                const origem = origemById[item.externalId] ?? null
+                return (
+                  <li
+                    key={item.externalId}
+                    className={clsx(
+                      'grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 md:grid-cols-[auto_6rem_1fr_12rem_auto_8rem]',
+                      item.duplicada && 'bg-slate-50 opacity-50',
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      aria-label={`Importar ${item.descricao}`}
+                      checked={selected.has(item.externalId)}
                       disabled={item.duplicada}
+                      onChange={() => toggle(item.externalId)}
+                      className="col-start-1 row-start-1 size-4 rounded border-slate-300 accent-emerald-600"
                     />
-                  </div>
-                  <button
-                    type="button"
-                    aria-pressed={ignored.has(item.externalId)}
-                    aria-label={`Não contar ${item.descricao} nos relatórios`}
-                    title="Não contar nos relatórios (transferência entre contas ou pagamento de fatura)"
-                    disabled={item.duplicada}
-                    onClick={() => toggleIgnored(item.externalId)}
-                    className={clsx(
-                      'col-start-3 row-start-2 justify-self-end rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed md:col-start-5 md:row-start-1',
-                      ignored.has(item.externalId)
-                        ? 'bg-slate-800 text-white'
-                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700',
-                    )}
-                  >
-                    <EyeOff className="size-4" aria-hidden />
-                  </button>
-                  <span
-                    className={clsx(
-                      'col-start-3 row-start-1 text-right text-sm font-medium whitespace-nowrap tabular-nums md:col-start-6',
-                      receita ? 'text-emerald-600' : 'text-red-600',
-                    )}
-                  >
-                    {receita ? '+' : '−'} {formatCurrency(item.valor)}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
+                    <span className="hidden text-sm whitespace-nowrap text-slate-600 tabular-nums md:col-start-2 md:row-start-1 md:block">
+                      {formatDate(item.data)}
+                    </span>
+                    <div className="col-start-2 row-start-1 min-w-0 md:col-start-3">
+                      <p className="truncate text-sm font-medium text-slate-900" title={item.descricao}>
+                        {item.descricao}
+                        {item.duplicada && (
+                          <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                            Duplicada
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        <span className="md:hidden">{formatDate(item.data)}</span>
+                        {ignored.has(item.externalId) && (
+                          <span className="font-medium text-slate-600">
+                            <span className="md:hidden"> · </span>Fora dos relatórios
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="col-start-2 row-start-2 min-w-0 md:col-start-4 md:row-start-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CategoryPillSelect
+                          label={`Categoria de ${item.descricao}`}
+                          value={categoryById[item.externalId] ?? null}
+                          onChange={(categoryId) => changeCategory(item.externalId, categoryId)}
+                          options={categories.filter((category) => category.tipo === item.tipo)}
+                          disabled={item.duplicada}
+                        />
+                        {!item.duplicada && categoryById[item.externalId] && (
+                          <OrigemBadge origem={origem} confianca={origem === 'IA' ? item.confianca : null} />
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-pressed={ignored.has(item.externalId)}
+                      aria-label={`Não contar ${item.descricao} nos relatórios`}
+                      title="Não contar nos relatórios (transferência entre contas ou pagamento de fatura)"
+                      disabled={item.duplicada}
+                      onClick={() => toggleIgnored(item.externalId)}
+                      className={clsx(
+                        'col-start-3 row-start-2 justify-self-end rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed md:col-start-5 md:row-start-1',
+                        ignored.has(item.externalId)
+                          ? 'bg-slate-800 text-white'
+                          : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700',
+                      )}
+                    >
+                      <EyeOff className="size-4" aria-hidden />
+                    </button>
+                    <span
+                      className={clsx(
+                        'col-start-3 row-start-1 text-right text-sm font-medium whitespace-nowrap tabular-nums md:col-start-6',
+                        receita ? 'text-emerald-600' : 'text-red-600',
+                      )}
+                    >
+                      {receita ? '+' : '−'} {formatCurrency(item.valor)}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
       )}
 

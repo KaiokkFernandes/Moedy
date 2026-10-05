@@ -7,6 +7,7 @@ import { categoryRuleRoutes } from "./categoryRule.routes.js";
 import { importRoutes } from "./import.routes.js";
 import { notificationRoutes } from "./notification.routes.js";
 import { reportRoutes } from "./report.routes.js";
+import { settingsRoutes } from "./settings.routes.js";
 import { transactionRoutes } from "./transaction.routes.js";
 
 export const routes = Router();
@@ -24,3 +25,4 @@ routes.use("/import", importRoutes);
 routes.use("/reports", reportRoutes);
 routes.use("/budgets", budgetRoutes);
 routes.use("/notifications", notificationRoutes);
+routes.use("/settings", settingsRoutes);

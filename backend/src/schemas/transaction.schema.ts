@@ -21,9 +21,24 @@ export const transactionSchema = z.object({
   ignorarNosRelatorios: z.boolean({ error: "Use true ou false" }).default(false),
 });
 
+/** De onde veio a categoria escolhida: a tela de revisão da IA manda "IA"; a edição manual manda "MANUAL". */
+export const categoriaOrigemSchema = z.enum(["MANUAL", "REGRA", "MEMORIA", "IA"], { error: "Origem inválida" });
+
 export const transactionCategorySchema = z.object({
   categoryId,
+  origem: categoriaOrigemSchema.default("MANUAL"),
 });
+
+/** Filtro das sugestões por IA: o mesmo recorte das transações, sem paginação. */
+export const suggestCategoriesQuerySchema = z.object({
+  dataInicio: dateSchema.optional(),
+  dataFim: dateSchema.optional(),
+  accountId: z.uuid({ error: "Conta inválida" }).optional(),
+  tipo: transactionTypeSchema.optional(),
+  busca: z.string().trim().max(140).optional(),
+});
+
+export type SuggestCategoriesQuery = z.infer<typeof suggestCategoriesQuerySchema>;
 
 const booleanParam = z
   .enum(["true", "false"], { error: "Use true ou false" })

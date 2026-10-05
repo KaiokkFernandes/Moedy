@@ -14,8 +14,9 @@ export async function update(id: string, data: TransactionInput) {
   return (await api.put<Transaction>(`/transactions/${id}`, data)).data
 }
 
-export async function updateCategory(id: string, categoryId: string | null) {
-  return (await api.patch<Transaction>(`/transactions/${id}/category`, { categoryId })).data
+/** `origem` diz de onde veio a escolha: "IA" quando o usuário aceitou uma sugestão. */
+export async function updateCategory(id: string, categoryId: string | null, origem: "MANUAL" | "IA" = "MANUAL") {
+  return (await api.patch<Transaction>(`/transactions/${id}/category`, { categoryId, origem })).data
 }
 
 export async function remove(id: string) {
