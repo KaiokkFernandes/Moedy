@@ -8,7 +8,8 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3333;
 
 app.use(cors());
-app.use(express.json());
+// O limite maior acomoda a confirmação de uma importação com milhares de transações
+app.use(express.json({ limit: "2mb" }));
 
 app.use("/api", routes);
 

@@ -10,6 +10,8 @@ interface TransactionListProps {
   categories: Category[]
   onEdit: (transaction: Transaction) => void
   onDelete: (transaction: Transaction) => void
+  /** Chamado quando a categoria é trocada na linha (para oferecer a criação de uma regra). */
+  onCategoryChanged?: (transaction: Transaction, category: Category) => void
 }
 
 function Amount({ transaction, className }: { transaction: Transaction; className?: string }) {
@@ -21,7 +23,11 @@ function Amount({ transaction, className }: { transaction: Transaction; classNam
   )
 }
 
-function RowActions({ transaction, onEdit, onDelete }: Omit<TransactionListProps, 'transactions' | 'categories'> & { transaction: Transaction }) {
+function RowActions({
+  transaction,
+  onEdit,
+  onDelete,
+}: Pick<TransactionListProps, 'onEdit' | 'onDelete'> & { transaction: Transaction }) {
   return (
     <div className="flex justify-end">
       <IconButton label={`Editar ${transaction.descricao}`} onClick={() => onEdit(transaction)}>
@@ -35,7 +41,13 @@ function RowActions({ transaction, onEdit, onDelete }: Omit<TransactionListProps
 }
 
 /** Tabela no desktop; lista de cards no celular. */
-export function TransactionList({ transactions, categories, onEdit, onDelete }: TransactionListProps) {
+export function TransactionList({
+  transactions,
+  categories,
+  onEdit,
+  onDelete,
+  onCategoryChanged,
+}: TransactionListProps) {
   return (
     <>
       <div className="hidden overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 md:block">
@@ -60,7 +72,11 @@ export function TransactionList({ transactions, categories, onEdit, onDelete }: 
                   {transaction.descricao}
                 </td>
                 <td className="max-w-48 px-4 py-2">
-                  <CategorySelect transaction={transaction} categories={categories} />
+                  <CategorySelect
+                    transaction={transaction}
+                    categories={categories}
+                    onCategoryChanged={onCategoryChanged}
+                  />
                 </td>
                 <td className="max-w-40 truncate px-4 py-2 text-slate-600">{transaction.account.nome}</td>
                 <td className="px-4 py-2 text-right">
@@ -89,7 +105,11 @@ export function TransactionList({ transactions, categories, onEdit, onDelete }: 
             </div>
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <CategorySelect transaction={transaction} categories={categories} />
+                <CategorySelect
+                    transaction={transaction}
+                    categories={categories}
+                    onCategoryChanged={onCategoryChanged}
+                  />
               </div>
               <div className="-m-2">
                 <RowActions transaction={transaction} onEdit={onEdit} onDelete={onDelete} />

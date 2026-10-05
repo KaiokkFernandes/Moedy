@@ -57,8 +57,8 @@ yarn prisma:migrate
 yarn seed
 ```
 
-O `yarn seed` cria o usuário de teste definido no `backend/.env`, com duas contas (corrente e cartão) e cerca de
-3 meses de transações fictícias. Pode rodar mais de uma vez sem duplicar nada:
+O `yarn seed` cria o usuário de teste definido no `backend/.env`, com duas contas (corrente e cartão), cerca de
+3 meses de transações fictícias e as regras de categorização padrão. Pode rodar mais de uma vez sem duplicar nada:
 
 | Email             | Senha        |
 | ----------------- | ------------ |
@@ -136,10 +136,42 @@ Todas as rotas abaixo exigem `Authorization: Bearer <token>` e só enxergam os d
 | Contas | `GET /api/accounts` (com `saldoAtual` e `totalTransacoes`), `POST`, `PUT /:id`, `DELETE /:id` |
 | Categorias | `GET /api/categories?tipo=`, `POST`, `PUT /:id`, `DELETE /:id` |
 | Transações | `GET /api/transactions`, `POST`, `PUT /:id`, `PATCH /:id/category`, `DELETE /:id` |
+| Regras | `GET /api/category-rules`, `POST`, `PUT /:id`, `DELETE /:id`, `POST /api/category-rules/apply` |
+| Importação | `POST /api/import/preview`, `POST /api/import/confirm` |
 
 - **Excluir conta com transações** responde 409 até receber `?confirm=true`, porque apaga as transações junto.
 - **Excluir categoria** não apaga transações: elas ficam sem categoria.
 - **Filtros de transações:** `dataInicio`, `dataFim`, `accountId`, `categoryId`, `tipo`, `busca`, `semCategoria`,
   `page` e `pageSize` (máx. 100). A resposta traz `itens`, `total`, `totalReceitas` e `totalDespesas` do filtro.
+
+## Importação de extrato (OFX e CSV)
+
+A importação tem duas etapas, para o usuário revisar antes de gravar:
+
+1. `POST /api/import/preview` (multipart: `arquivo` + `accountId`; até 5 MB, só `.ofx` e `.csv`) lê o arquivo e
+   devolve as transações encontradas, com a categoria sugerida pelas regras e a marca `duplicada` para o que já
+   existe na conta. Nada é gravado.
+2. `POST /api/import/confirm` (`accountId` + lista revisada) grava tudo em uma transação do banco e ignora
+   as duplicadas.
+
+- **CSV:** a primeira chamada do preview devolve os cabeçalhos e as primeiras linhas (`etapa: "mapeamento"`);
+  envie o arquivo de novo com o campo `mapeamento` (JSON com os índices das colunas: `data`, `descricao` e
+  `valor`, ou `entrada`/`saida`). O separador (`;`, `,` ou tab) é detectado automaticamente.
+- **Codificação:** UTF-8 ou windows-1252 (latin1), detectada automaticamente.
+- **Valores:** convertidos para centavos sem passar por ponto flutuante; aceita `1.234,56` e `1234.56`.
+- **Duplicatas:** o OFX usa o `FITID` do banco como identificador; o CSV, um hash de data + valor + descrição +
+  posição entre linhas iguais no mesmo dia. Reimportar o mesmo arquivo na mesma conta importa zero.
+
+Há extratos fictícios para teste em [backend/samples](backend/samples/).
+
+## Regras de categorização
+
+Uma regra liga uma palavra-chave a uma categoria. A comparação ignora maiúsculas e acentos, só vale para
+transações do mesmo tipo (despesa/receita) da categoria e, quando mais de uma regra serve, vence a palavra-chave
+mais longa. Palavras-chave de até 3 caracteres (como `99`) só casam como palavra inteira.
+
+Todo usuário novo recebe regras padrão para nomes comuns no Brasil (iFood, Uber, Netflix, farmácia, posto etc.);
+o `yarn seed` repõe as que faltarem no usuário de teste. `POST /api/category-rules/apply` aplica as regras às
+transações que estão sem categoria.
 
 No frontend, o token fica no `localStorage`; rotas da área logada redirecionam para `/login` sem sessão.

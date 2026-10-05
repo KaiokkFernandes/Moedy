@@ -56,6 +56,20 @@ export function TransactionFilters({ filters, accounts, categories }: Transactio
             </button>
           )
         })}
+        <span aria-hidden className="mx-1 h-5 w-px bg-slate-200" />
+        <button
+          type="button"
+          aria-pressed={values.categoria === SEM_CATEGORIA}
+          onClick={() => update({ categoria: values.categoria === SEM_CATEGORIA ? null : SEM_CATEGORIA })}
+          className={clsx(
+            'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
+            values.categoria === SEM_CATEGORIA
+              ? 'bg-emerald-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+          )}
+        >
+          Sem categoria
+        </button>
         {hasFilters && (
           <Button
             variant="ghost"

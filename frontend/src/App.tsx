@@ -8,6 +8,7 @@ import { Login } from '@/pages/Login'
 import { Orcamentos } from '@/pages/Orcamentos'
 import { Painel } from '@/pages/Painel'
 import { Register } from '@/pages/Register'
+import { Regras } from '@/pages/Regras'
 import { Relatorios } from '@/pages/Relatorios'
 import { Transacoes } from '@/pages/Transacoes'
 
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/orcamentos" element={<Orcamentos />} />
           <Route path="/contas" element={<Contas />} />
           <Route path="/categorias" element={<Categorias />} />
+          <Route path="/regras" element={<Regras />} />
           <Route path="/importar" element={<Importar />} />
         </Route>
       </Route>

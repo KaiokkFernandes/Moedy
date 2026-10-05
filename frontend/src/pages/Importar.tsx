@@ -1,5 +1,263 @@
-import { PageTitle } from '@/components/PageTitle'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import clsx from 'clsx'
+import { Check, CircleCheck, Landmark } from 'lucide-react'
+import { ColumnMapping } from '@/components/import/ColumnMapping'
+import { FileDropzone } from '@/components/import/FileDropzone'
+import { ImportReview } from '@/components/import/ImportReview'
+import { PageHeader } from '@/components/PageHeader'
+import { Button } from '@/components/ui/Button'
+import { Select } from '@/components/ui/Select'
+import { EmptyState, ErrorState, Loading } from '@/components/ui/States'
+import { useAccounts } from '@/hooks/useAccounts'
+import { useCategories } from '@/hooks/useCategories'
+import { useImportConfirm, useImportPreview } from '@/hooks/useImport'
+import { getErrorMessage } from '@/lib/api'
+import { pluralize } from '@/lib/format'
+import type { CsvMapping, CsvMappingStep, ImportItem, ImportResult, ImportReview as ImportReviewData } from '@/types/import'
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+type Step =
+  | { name: 'arquivo' }
+  | { name: 'colunas'; mapping: CsvMappingStep; chosen?: CsvMapping }
+  | { name: 'revisao'; review: ImportReviewData; mapping?: CsvMappingStep; chosen?: CsvMapping }
+  | { name: 'concluido'; result: ImportResult }
+
+/** Checagens rápidas antes de enviar; a API valida tudo de novo. */
+function validateFile(file: File) {
+  if (!/\.(ofx|csv)$/i.test(file.name)) return 'Formato não suportado: escolha um arquivo .ofx ou .csv.'
+  if (file.size === 0) return 'O arquivo está vazio.'
+  if (file.size > MAX_FILE_SIZE) return 'O arquivo deve ter no máximo 5 MB.'
+  return ''
+}
+
+function Steps({ current, csv }: { current: Step['name']; csv: boolean }) {
+  const steps: { name: Step['name']; label: string }[] = [
+    { name: 'arquivo', label: 'Arquivo' },
+    ...(csv ? [{ name: 'colunas' as const, label: 'Colunas' }] : []),
+    { name: 'revisao', label: 'Revisão' },
+    { name: 'concluido', label: 'Concluído' },
+  ]
+  const currentIndex = steps.findIndex((step) => step.name === current)
+
+  return (
+    <ol className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-sm">
+      {steps.map((step, index) => (
+        <li key={step.name} aria-current={index === currentIndex ? 'step' : undefined} className="flex items-center gap-2">
+          <span
+            className={clsx(
+              'flex size-6 items-center justify-center rounded-full text-xs font-semibold',
+              index < currentIndex && 'bg-emerald-100 text-emerald-700',
+              index === currentIndex && 'bg-emerald-600 text-white',
+              index > currentIndex && 'bg-slate-200 text-slate-500',
+            )}
+          >
+            {index < currentIndex ? <Check className="size-3.5" aria-hidden /> : index + 1}
+          </span>
+          <span className={index === currentIndex ? 'font-medium text-slate-900' : 'text-slate-500'}>{step.label}</span>
+          {index < steps.length - 1 && <span aria-hidden className="mx-1 h-px w-6 bg-slate-300" />}
+        </li>
+      ))}
+    </ol>
+  )
+}
 
 export function Importar() {
-  return <PageTitle>Importar</PageTitle>
+  const accounts = useAccounts()
+  const categories = useCategories()
+  const preview = useImportPreview()
+  const confirm = useImportConfirm()
+  const [step, setStep] = useState<Step>({ name: 'arquivo' })
+  const [accountId, setAccountId] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [fileError, setFileError] = useState('')
+
+  if (accounts.isPending || categories.isPending) {
+    return (
+      <>
+        <PageHeader title="Importar extrato" />
+        <Loading />
+      </>
+    )
+  }
+
+  if (accounts.isError || categories.isError) {
+    return (
+      <>
+        <PageHeader title="Importar extrato" />
+        <ErrorState
+          message={getErrorMessage(accounts.error ?? categories.error, 'Não foi possível carregar os dados.')}
+          onRetry={() => {
+            accounts.refetch()
+            categories.refetch()
+          }}
+        />
+      </>
+    )
+  }
+
+  if (accounts.data.length === 0) {
+    return (
+      <>
+        <PageHeader title="Importar extrato" />
+        <EmptyState
+          icon={Landmark}
+          title="Cadastre uma conta primeiro"
+          description="As transações importadas entram em uma conta. Crie a conta de destino antes de importar."
+          action={
+            <Link
+              to="/contas"
+              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Ir para Contas
+            </Link>
+          }
+        />
+      </>
+    )
+  }
+
+  // Sem escolha explícita, a conta de destino é a primeira
+  const destino = accounts.data.find((account) => account.id === accountId) ?? accounts.data[0]!
+  const isCsv = file ? /\.csv$/i.test(file.name) : step.name === 'colunas'
+
+  function selectFile(next: File | null) {
+    setFile(next)
+    setFileError(next ? validateFile(next) : '')
+    preview.reset()
+  }
+
+  /** Envia o arquivo para leitura. Sem mapeamento, um CSV volta pedindo as colunas. */
+  async function readFile(mapeamento?: CsvMapping, mapping?: CsvMappingStep) {
+    if (!file) {
+      setFileError('Escolha o arquivo do extrato.')
+      return
+    }
+    if (validateFile(file)) return
+
+    try {
+      const data = await preview.mutateAsync({ accountId: destino.id, file, mapeamento })
+      setStep(
+        data.etapa === 'mapeamento'
+          ? { name: 'colunas', mapping: data }
+          : { name: 'revisao', review: data, mapping, chosen: mapeamento },
+      )
+    } catch {
+      // O erro aparece na etapa atual
+    }
+  }
+
+  async function importItems(itens: ImportItem[]) {
+    try {
+      setStep({ name: 'concluido', result: await confirm.mutateAsync({ accountId: destino.id, itens }) })
+    } catch {
+      // O erro aparece na revisão
+    }
+  }
+
+  function restart() {
+    setStep({ name: 'arquivo' })
+    setFile(null)
+    setFileError('')
+    preview.reset()
+    confirm.reset()
+  }
+
+  const previewError = preview.isError ? getErrorMessage(preview.error, 'Não foi possível ler o arquivo.') : ''
+
+  return (
+    <>
+      <PageHeader title="Importar extrato" />
+      <Steps current={step.name} csv={isCsv} />
+
+      {step.name === 'arquivo' && (
+        <div className="max-w-2xl space-y-5">
+          <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+            <Select
+              label="Conta de destino"
+              value={destino.id}
+              onChange={(e) => setAccountId(e.target.value)}
+              hint="As transações do arquivo serão lançadas nesta conta."
+            >
+              {accounts.data.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.nome}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <FileDropzone file={file} onSelect={selectFile} error={fileError || previewError} />
+
+          <div className="flex justify-end">
+            <Button onClick={() => readFile()} loading={preview.isPending} disabled={Boolean(fileError)}>
+              Ler arquivo
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step.name === 'colunas' && (
+        <ColumnMapping
+          data={step.mapping}
+          initial={step.chosen}
+          loading={preview.isPending}
+          error={previewError}
+          onBack={() => {
+            preview.reset()
+            setStep({ name: 'arquivo' })
+          }}
+          onSubmit={(mapeamento) => readFile(mapeamento, step.mapping)}
+        />
+      )}
+
+      {step.name === 'revisao' && (
+        <>
+          <p className="mb-4 text-sm text-slate-600">
+            Confira as transações de <strong className="text-slate-900">{file?.name}</strong> que entrarão na conta{' '}
+            <strong className="text-slate-900">{destino.nome}</strong>. Nada foi gravado ainda.
+          </p>
+          <ImportReview
+            data={step.review}
+            categories={categories.data}
+            loading={confirm.isPending}
+            error={confirm.isError ? getErrorMessage(confirm.error, 'Não foi possível importar as transações.') : ''}
+            onBack={() => {
+              confirm.reset()
+              setStep(step.mapping ? { name: 'colunas', mapping: step.mapping, chosen: step.chosen } : { name: 'arquivo' })
+            }}
+            onConfirm={importItems}
+          />
+        </>
+      )}
+
+      {step.name === 'concluido' && (
+        <div className="flex max-w-2xl flex-col items-center rounded-2xl bg-white px-6 py-12 text-center ring-1 ring-slate-200">
+          <CircleCheck className="size-12 text-emerald-600" aria-hidden />
+          <h2 className="mt-4 text-lg font-semibold text-slate-900">
+            {step.result.importadas === 0
+              ? 'Nenhuma transação nova foi importada'
+              : `${pluralize(step.result.importadas, 'transação importada', 'transações importadas')}`}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Conta: {destino.nome}.
+            {step.result.ignoradas > 0 &&
+              ` ${pluralize(step.result.ignoradas, 'transação ignorada', 'transações ignoradas')} por já ${step.result.ignoradas === 1 ? 'existir' : 'existirem'} na conta.`}
+          </p>
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+            <Link
+              to={`/transacoes?conta=${destino.id}&periodo=tudo`}
+              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+            >
+              Ver transações da conta
+            </Link>
+            <Button variant="secondary" onClick={restart}>
+              Importar outro arquivo
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  )
 }

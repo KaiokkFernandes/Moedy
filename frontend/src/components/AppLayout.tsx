@@ -12,6 +12,7 @@ import {
   Target,
   Upload,
   Wallet,
+  WandSparkles,
   X,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,6 +24,7 @@ const NAV_LINKS = [
   { to: '/orcamentos', label: 'Orçamentos', icon: Target },
   { to: '/contas', label: 'Contas', icon: Landmark },
   { to: '/categorias', label: 'Categorias', icon: Tags },
+  { to: '/regras', label: 'Regras', icon: WandSparkles },
   { to: '/importar', label: 'Importar', icon: Upload },
 ]
 

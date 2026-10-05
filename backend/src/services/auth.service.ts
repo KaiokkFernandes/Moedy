@@ -5,6 +5,7 @@ import { signToken } from "../lib/jwt.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../middlewares/errorHandler.js";
 import type { LoginInput, RegisterInput } from "../schemas/auth.schema.js";
+import { ensureDefaultRules } from "./categoryRule.service.js";
 
 const SALT_ROUNDS = 10;
 
@@ -14,15 +15,16 @@ function toPublicUser({ senha: _senha, ...user }: User): PublicUser {
   return user;
 }
 
-/** Cria o usuário já com as categorias padrão. Usado pelo cadastro e pelo seed. */
+/** Cria o usuário já com as categorias e as regras de categorização padrão. Usado pelo cadastro e pelo seed. */
 export async function createUserWithDefaults({ nome, email, senha }: RegisterInput): Promise<User> {
-  return prisma.user.create({
-    data: {
-      nome,
-      email,
-      senha: await bcrypt.hash(senha, SALT_ROUNDS),
-      categories: { create: DEFAULT_CATEGORIES },
-    },
+  const hash = await bcrypt.hash(senha, SALT_ROUNDS);
+
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: { nome, email, senha: hash, categories: { create: DEFAULT_CATEGORIES } },
+    });
+    await ensureDefaultRules(user.id, tx);
+    return user;
   });
 }
 

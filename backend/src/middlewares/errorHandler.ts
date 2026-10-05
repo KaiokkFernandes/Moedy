@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
+import { MulterError } from "multer";
 import { ZodError } from "zod";
 
 export class AppError extends Error {
@@ -31,6 +32,16 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // Erros do upload (multer): arquivo grande demais, campo errado etc.
+  if (err instanceof MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "O arquivo deve ter no máximo 5 MB"
+        : "Envie um único arquivo no campo \"arquivo\"";
+    res.status(400).json({ error: message });
+    return;
+  }
+
   // Violação de índice único do banco (ex.: duas requisições simultâneas criando o mesmo registro)
   if (err?.code === "P2002") {
     res.status(409).json({ error: "Já existe um registro com esses dados" });
@@ -38,6 +49,11 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   // Corpo da requisição com JSON malformado (lançado pelo express.json)
+  if (err?.type === "entity.too.large") {
+    res.status(413).json({ error: "Requisição grande demais" });
+    return;
+  }
+
   if (err?.type === "entity.parse.failed") {
     res.status(400).json({ error: "JSON inválido no corpo da requisição" });
     return;

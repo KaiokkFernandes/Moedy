@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?OFX OFXHEADER="200" VERSION="211" SECURITY="NONE" OLDFILEUID="NONE" NEWFILEUID="NONE"?>
+<OFX>
+  <CREDITCARDMSGSRSV1>
+    <CCSTMTTRNRS>
+      <TRNUID>1</TRNUID>
+      <CCSTMTRS>
+        <CURDEF>BRL</CURDEF>
+        <CCACCTFROM>
+          <ACCTID>0000********0000</ACCTID>
+        </CCACCTFROM>
+        <BANKTRANLIST>
+        <DTSTART>20261001</DTSTART>
+        <DTEND>20261005</DTEND>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261001</DTPOSTED>
+          <TRNAMT>-45.90</TRNAMT>
+          <FITID>CC-0001</FITID>
+          <NAME>IFOOD *BURGER KING</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261001</DTPOSTED>
+          <TRNAMT>-44.90</TRNAMT>
+          <FITID>CC-0002</FITID>
+          <NAME>NETFLIX.COM</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261002</DTPOSTED>
+          <TRNAMT>-19.90</TRNAMT>
+          <FITID>CC-0003</FITID>
+          <NAME>AMAZON PRIME BR</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261002</DTPOSTED>
+          <TRNAMT>-289.00</TRNAMT>
+          <FITID>CC-0004</FITID>
+          <NAME>MERCADO LIVRE*ELETRÔNICOS</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261003</DTPOSTED>
+          <TRNAMT>-23.40</TRNAMT>
+          <FITID>CC-0005</FITID>
+          <NAME>99APP *CORRIDA</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261003</DTPOSTED>
+          <TRNAMT>-38.50</TRNAMT>
+          <FITID>CC-0006</FITID>
+          <NAME>UBER EATS</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261003</DTPOSTED>
+          <TRNAMT>-21.90</TRNAMT>
+          <FITID>CC-0007</FITID>
+          <NAME>SPOTIFY</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261004</DTPOSTED>
+          <TRNAMT>-67.80</TRNAMT>
+          <FITID>CC-0008</FITID>
+          <NAME>FARMÁCIA DROGASIL</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261004</DTPOSTED>
+          <TRNAMT>-67.80</TRNAMT>
+          <FITID>CC-0008</FITID>
+          <NAME>FARMÁCIA DROGASIL</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>CREDIT</TRNTYPE>
+          <DTPOSTED>20261004</DTPOSTED>
+          <TRNAMT>79.90</TRNAMT>
+          <FITID>CC-0009</FITID>
+          <NAME>ESTORNO COMPRA RENNER</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261005</DTPOSTED>
+          <TRNAMT>-32.00</TRNAMT>
+          <FITID>CC-0010</FITID>
+          <NAME>CINEMARK SHOPPING ELDORADO</NAME>
+        </STMTTRN>
+        <STMTTRN>
+          <TRNTYPE>DEBIT</TRNTYPE>
+          <DTPOSTED>20261005</DTPOSTED>
+          <TRNAMT>-150.00</TRNAMT>
+          <FITID>CC-0011</FITID>
+          <NAME>LOJA DE CONVENIÊNCIA 24H</NAME>
+        </STMTTRN>
+        </BANKTRANLIST>
+      </CCSTMTRS>
+    </CCSTMTTRNRS>
+  </CREDITCARDMSGSRSV1>
+</OFX>

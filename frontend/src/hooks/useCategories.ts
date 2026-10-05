@@ -6,13 +6,14 @@ export function useCategories() {
   return useQuery({ queryKey: ['categories'], queryFn: categoriesService.list })
 }
 
-// Nome, cor e ícone da categoria aparecem nas transações
+// Nome, cor e ícone da categoria aparecem nas transações e nas regras (excluir a categoria apaga as regras dela)
 function useInvalidateCategories() {
   const queryClient = useQueryClient()
   return () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ['categories'] }),
       queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+      queryClient.invalidateQueries({ queryKey: ['category-rules'] }),
     ])
 }
 

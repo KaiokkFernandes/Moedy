@@ -5,6 +5,7 @@ import { DEFAULT_CATEGORIES } from "../src/lib/defaultCategories.js";
 import { prisma } from "../src/lib/prisma.js";
 import { registerSchema } from "../src/schemas/auth.schema.js";
 import { createUserWithDefaults } from "../src/services/auth.service.js";
+import { ensureDefaultRules } from "../src/services/categoryRule.service.js";
 import { buildSeedTransactions } from "./seedTransactions.js";
 
 // As credenciais do usuário de teste vêm do .env (veja o .env.example).
@@ -45,6 +46,10 @@ if (!user) {
 }
 
 const userId = user.id;
+
+// Repõe as regras de categorização padrão que faltarem (as já existentes não são alteradas).
+const novasRegras = await ensureDefaultRules(userId);
+if (novasRegras > 0) console.log(`✅ ${novasRegras} regras de categorização padrão criadas`);
 
 // Contas de exemplo, identificadas pelo externalId para não duplicar ao rodar o seed de novo.
 async function ensureAccount(externalId: string, nome: string, tipo: AccountType, saldoInicial: number) {
