@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { Pencil, Trash2 } from 'lucide-react'
+import { EyeOff, Pencil, Trash2 } from 'lucide-react'
 import { IconButton } from '@/components/ui/Button'
 import { formatCurrency, formatDate } from '@/lib/format'
 import type { Category, Transaction } from '@/types/finance'
@@ -12,6 +12,19 @@ interface TransactionListProps {
   onDelete: (transaction: Transaction) => void
   /** Chamado quando a categoria é trocada na linha (para oferecer a criação de uma regra). */
   onCategoryChanged?: (transaction: Transaction, category: Category) => void
+}
+
+/** Marca transferências e pagamentos de fatura, que não entram nos totais nem nos relatórios. */
+function IgnoredBadge() {
+  return (
+    <span
+      title="Não conta nos totais nem nos relatórios (transferência ou pagamento de fatura)"
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600"
+    >
+      <EyeOff className="size-3" aria-hidden />
+      Fora dos relatórios
+    </span>
+  )
 }
 
 function Amount({ transaction, className }: { transaction: Transaction; className?: string }) {
@@ -68,8 +81,13 @@ export function TransactionList({
             {transactions.map((transaction) => (
               <tr key={transaction.id} className="hover:bg-slate-50">
                 <td className="px-4 py-2 whitespace-nowrap text-slate-600 tabular-nums">{formatDate(transaction.data)}</td>
-                <td className="max-w-64 truncate px-4 py-2 font-medium text-slate-900" title={transaction.descricao}>
-                  {transaction.descricao}
+                <td className="max-w-72 px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium text-slate-900" title={transaction.descricao}>
+                      {transaction.descricao}
+                    </span>
+                    {transaction.ignorarNosRelatorios && <IgnoredBadge />}
+                  </div>
                 </td>
                 <td className="max-w-48 px-4 py-2">
                   <CategorySelect
@@ -97,6 +115,7 @@ export function TransactionList({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">{transaction.descricao}</p>
+                {transaction.ignorarNosRelatorios && <IgnoredBadge />}
                 <p className="mt-0.5 truncate text-xs text-slate-500">
                   {formatDate(transaction.data)} · {transaction.account.nome}
                 </p>

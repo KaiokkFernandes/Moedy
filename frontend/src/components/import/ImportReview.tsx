@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { EyeOff } from 'lucide-react'
 import { CategoryPillSelect } from '@/components/categories/CategoryPillSelect'
 import { FormAlert } from '@/components/FormAlert'
 import { Button } from '@/components/ui/Button'
@@ -37,11 +38,25 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
     Object.fromEntries(itens.map((item) => [item.externalId, item.categoryId])),
   )
 
+  // Começa com a sugestão da API (pagamento de fatura, transferência entre contas)
+  const [ignored, setIgnored] = useState(
+    () => new Set(itens.filter((item) => item.ignorarNosRelatorios).map((item) => item.externalId)),
+  )
+
   const allSelected = selected.size === novas.length && novas.length > 0
   const selectAllRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (selectAllRef.current) selectAllRef.current.indeterminate = selected.size > 0 && !allSelected
   }, [selected, allSelected])
+
+  function toggleIgnored(externalId: string) {
+    setIgnored((prev) => {
+      const next = new Set(prev)
+      if (next.has(externalId)) next.delete(externalId)
+      else next.add(externalId)
+      return next
+    })
+  }
 
   function toggle(externalId: string) {
     setSelected((prev) => {
@@ -56,7 +71,11 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
     onConfirm(
       novas
         .filter((item) => selected.has(item.externalId))
-        .map((item) => ({ ...item, categoryId: categoryById[item.externalId] ?? null })),
+        .map((item) => ({
+          ...item,
+          categoryId: categoryById[item.externalId] ?? null,
+          ignorarNosRelatorios: ignored.has(item.externalId),
+        })),
     )
   }
 
@@ -117,7 +136,7 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                 <li
                   key={item.externalId}
                   className={clsx(
-                    'grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 md:grid-cols-[auto_6rem_1fr_12rem_8rem]',
+                    'grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 md:grid-cols-[auto_6rem_1fr_12rem_auto_8rem]',
                     item.duplicada && 'bg-slate-50 opacity-50',
                   )}
                 >
@@ -141,9 +160,16 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                         </span>
                       )}
                     </p>
-                    <p className="text-xs text-slate-500 md:hidden">{formatDate(item.data)}</p>
+                    <p className="text-xs text-slate-500">
+                      <span className="md:hidden">{formatDate(item.data)}</span>
+                      {ignored.has(item.externalId) && (
+                        <span className="font-medium text-slate-600">
+                          <span className="md:hidden"> · </span>Fora dos relatórios
+                        </span>
+                      )}
+                    </p>
                   </div>
-                  <div className="col-span-2 col-start-2 row-start-2 min-w-0 md:col-span-1 md:col-start-4 md:row-start-1">
+                  <div className="col-start-2 row-start-2 min-w-0 md:col-start-4 md:row-start-1">
                     <CategoryPillSelect
                       label={`Categoria de ${item.descricao}`}
                       value={categoryById[item.externalId] ?? null}
@@ -152,9 +178,25 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                       disabled={item.duplicada}
                     />
                   </div>
+                  <button
+                    type="button"
+                    aria-pressed={ignored.has(item.externalId)}
+                    aria-label={`Não contar ${item.descricao} nos relatórios`}
+                    title="Não contar nos relatórios (transferência entre contas ou pagamento de fatura)"
+                    disabled={item.duplicada}
+                    onClick={() => toggleIgnored(item.externalId)}
+                    className={clsx(
+                      'col-start-3 row-start-2 justify-self-end rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed md:col-start-5 md:row-start-1',
+                      ignored.has(item.externalId)
+                        ? 'bg-slate-800 text-white'
+                        : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700',
+                    )}
+                  >
+                    <EyeOff className="size-4" aria-hidden />
+                  </button>
                   <span
                     className={clsx(
-                      'col-start-3 row-start-1 text-right text-sm font-medium whitespace-nowrap tabular-nums md:col-start-5',
+                      'col-start-3 row-start-1 text-right text-sm font-medium whitespace-nowrap tabular-nums md:col-start-6',
                       receita ? 'text-emerald-600' : 'text-red-600',
                     )}
                   >

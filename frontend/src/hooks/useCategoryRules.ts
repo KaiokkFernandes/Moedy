@@ -28,6 +28,10 @@ export function useApplyCategoryRules() {
   return useMutation({
     mutationFn: categoryRulesService.apply,
     // Aplicar as regras muda a categoria das transações
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+        queryClient.invalidateQueries({ queryKey: ['reports'] }),
+      ]),
   })
 }

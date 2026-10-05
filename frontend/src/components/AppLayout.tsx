@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import clsx from 'clsx'
 import {
@@ -15,6 +15,7 @@ import {
   WandSparkles,
   X,
 } from 'lucide-react'
+import { Loading } from '@/components/ui/States'
 import { useAuth } from '@/hooks/useAuth'
 
 const NAV_LINKS = [
@@ -129,7 +130,10 @@ export function AppLayout() {
       </aside>
 
       <main className="min-w-0 flex-1 p-4 md:p-8">
-        <Outlet />
+        {/* Páginas carregadas sob demanda mostram "Carregando" enquanto o código delas chega */}
+        <Suspense fallback={<Loading />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )

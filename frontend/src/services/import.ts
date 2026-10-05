@@ -14,13 +14,14 @@ export async function confirm(accountId: string, itens: ImportItem[]) {
   return (
     await api.post<ImportResult>('/import/confirm', {
       accountId,
-      itens: itens.map(({ data, descricao, valor, tipo, externalId, categoryId }) => ({
+      itens: itens.map(({ data, descricao, valor, tipo, externalId, categoryId, ignorarNosRelatorios }) => ({
         data,
         descricao,
         valor,
         tipo,
         externalId,
         categoryId,
+        ignorarNosRelatorios,
       })),
     })
   ).data

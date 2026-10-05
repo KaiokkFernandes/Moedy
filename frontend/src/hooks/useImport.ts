@@ -19,6 +19,7 @@ export function useImportConfirm() {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['transactions'] }),
         queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+        queryClient.invalidateQueries({ queryKey: ['reports'] }),
       ]),
   })
 }

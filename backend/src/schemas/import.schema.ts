@@ -55,6 +55,7 @@ export const confirmSchema = z.object({
         tipo: transactionTypeSchema,
         externalId: z.string({ error: "Informe o externalId" }).min(1, "Informe o externalId").max(200, "externalId muito longo"),
         categoryId: z.uuid({ error: "Categoria inválida" }).nullable().default(null),
+        ignorarNosRelatorios: z.boolean({ error: "Use true ou false" }).default(false),
       }),
       { error: "Informe a lista de transações" },
     )

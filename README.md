@@ -58,7 +58,8 @@ yarn seed
 ```
 
 O `yarn seed` cria o usuário de teste definido no `backend/.env`, com duas contas (corrente e cartão), cerca de
-3 meses de transações fictícias e as regras de categorização padrão. Pode rodar mais de uma vez sem duplicar nada:
+3 meses de transações fictícias (incluindo o pagamento mensal da fatura do cartão, marcado para ficar fora dos
+relatórios) e as regras de categorização padrão. Pode rodar mais de uma vez sem duplicar nada:
 
 | Email             | Senha        |
 | ----------------- | ------------ |
@@ -138,11 +139,38 @@ Todas as rotas abaixo exigem `Authorization: Bearer <token>` e só enxergam os d
 | Transações | `GET /api/transactions`, `POST`, `PUT /:id`, `PATCH /:id/category`, `DELETE /:id` |
 | Regras | `GET /api/category-rules`, `POST`, `PUT /:id`, `DELETE /:id`, `POST /api/category-rules/apply` |
 | Importação | `POST /api/import/preview`, `POST /api/import/confirm` |
+| Relatórios | `GET /api/reports/summary`, `by-category`, `monthly`, `daily`, `top-merchants`, `largest-expenses`, `recurring`, `category-trend`, `export` |
 
 - **Excluir conta com transações** responde 409 até receber `?confirm=true`, porque apaga as transações junto.
 - **Excluir categoria** não apaga transações: elas ficam sem categoria.
 - **Filtros de transações:** `dataInicio`, `dataFim`, `accountId`, `categoryId`, `tipo`, `busca`, `semCategoria`,
   `page` e `pageSize` (máx. 100). A resposta traz `itens`, `total`, `totalReceitas` e `totalDespesas` do filtro.
+
+## Painel e relatórios
+
+Todas as rotas de `/api/reports` aceitam `dataInicio`, `dataFim` e `accountId` (opcionais; sem datas, vale o
+mês atual). As somas e os agrupamentos são feitos pelo banco.
+
+| Rota | O que devolve |
+| ---- | ------------- |
+| `summary` | Receitas, despesas e saldo do período, os mesmos números do período anterior e a variação % (`null` quando o anterior é zero), além do saldo das contas no início e no fim |
+| `by-category?tipo=` | Total, percentual e quantidade por categoria (com cor e ícone), incluindo "Sem categoria" |
+| `monthly?meses=12` | Receitas, despesas e saldo por mês; meses sem movimento vêm com zero |
+| `daily` | Gasto acumulado dia a dia no mês de referência e no anterior |
+| `top-merchants?limite=10` | Maiores estabelecimentos, juntando descrições parecidas (sem parcela e códigos no fim) |
+| `largest-expenses?limite=5` | As maiores despesas do período |
+| `recurring` | Cobranças fixas: mesma descrição, valor parecido (±20%), 3+ meses seguidos e ainda ativas |
+| `category-trend?categoryId=` | Evolução mensal de uma categoria (ou `semCategoria=true&tipo=`) |
+| `export` | CSV das transações do período (`;`, vírgula decimal, UTF-8 com BOM para o Excel) |
+
+- **Período anterior:** meses cheios são comparados com os meses cheios anteriores; qualquer outro intervalo,
+  com o mesmo número de dias imediatamente antes.
+- **Fuso:** "hoje" e o "mês atual" seguem America/Sao_Paulo. As transações guardam só o dia (sem hora), então
+  uma compra do dia 31 é sempre do dia 31.
+- **Transferências e pagamento de fatura:** transações marcadas com `ignorarNosRelatorios` ficam fora de todos
+  os relatórios e dos totais da listagem de transações, mas continuam contando no saldo das contas. A marcação
+  é feita na edição da transação ou na revisão da importação (que já sugere para descrições como "pagamento de
+  fatura"). O CSV exportado traz todas, com a coluna "Fora dos relatórios".
 
 ## Importação de extrato (OFX e CSV)
 

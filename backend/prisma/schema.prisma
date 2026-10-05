@@ -81,6 +81,9 @@ model Transaction {
   data       DateTime
   tipo       TransactionType
   externalId String?
+  // Transferências entre contas próprias e pagamentos de fatura: movimentam o saldo da conta,
+  // mas não são receita nem despesa de verdade, então ficam fora dos relatórios.
+  ignorarNosRelatorios Boolean @default(false)
   createdAt  DateTime        @default(now())
 
   account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)

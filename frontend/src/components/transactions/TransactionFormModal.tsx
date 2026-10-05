@@ -46,6 +46,7 @@ function TransactionForm({
   const [data, setData] = useState(transaction?.data ?? today())
   const [accountId, setAccountId] = useState(transaction?.accountId ?? (defaultAccountId || accounts[0]?.id) ?? '')
   const [categoryId, setCategoryId] = useState(transaction?.categoryId ?? '')
+  const [ignorarNosRelatorios, setIgnorarNosRelatorios] = useState(transaction?.ignorarNosRelatorios ?? false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState('')
 
@@ -73,7 +74,7 @@ function TransactionForm({
     try {
       await saveTransaction.mutateAsync({
         id: transaction?.id,
-        data: { tipo, valor, descricao, data, accountId, categoryId: categoryId || null },
+        data: { tipo, valor, descricao, data, accountId, categoryId: categoryId || null, ignorarNosRelatorios },
       })
       onClose()
     } catch (error) {
@@ -126,6 +127,21 @@ function TransactionForm({
           ))}
         </Select>
       </div>
+
+      <label className="flex items-start gap-2 text-sm text-slate-700">
+        <input
+          type="checkbox"
+          checked={ignorarNosRelatorios}
+          onChange={(e) => setIgnorarNosRelatorios(e.target.checked)}
+          className="mt-0.5 size-4 rounded border-slate-300 accent-emerald-600"
+        />
+        <span>
+          Não contar nos relatórios
+          <span className="block text-xs text-slate-500">
+            Para transferências entre suas contas e pagamento de fatura do cartão. O saldo da conta continua contando.
+          </span>
+        </span>
+      </label>
 
       <ModalActions>
         <Button variant="secondary" onClick={onClose} disabled={saveTransaction.isPending}>

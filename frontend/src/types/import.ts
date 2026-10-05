@@ -38,6 +38,8 @@ export interface ImportItem {
   externalId: string
   /** Categoria sugerida pelas regras (ou escolhida pelo usuário na revisão). */
   categoryId: string | null
+  /** Sugerido pela API para pagamentos de fatura e transferências; o usuário pode mudar na revisão. */
+  ignorarNosRelatorios: boolean
   /** Já existe na conta de destino. */
   duplicada: boolean
 }

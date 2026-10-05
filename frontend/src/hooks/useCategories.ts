@@ -14,6 +14,7 @@ function useInvalidateCategories() {
       queryClient.invalidateQueries({ queryKey: ['categories'] }),
       queryClient.invalidateQueries({ queryKey: ['transactions'] }),
       queryClient.invalidateQueries({ queryKey: ['category-rules'] }),
+      queryClient.invalidateQueries({ queryKey: ['reports'] }),
     ])
 }
 

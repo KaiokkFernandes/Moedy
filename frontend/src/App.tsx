@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/AppLayout'
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/RouteGuards'
@@ -6,11 +7,14 @@ import { Contas } from '@/pages/Contas'
 import { Importar } from '@/pages/Importar'
 import { Login } from '@/pages/Login'
 import { Orcamentos } from '@/pages/Orcamentos'
-import { Painel } from '@/pages/Painel'
 import { Register } from '@/pages/Register'
 import { Regras } from '@/pages/Regras'
-import { Relatorios } from '@/pages/Relatorios'
 import { Transacoes } from '@/pages/Transacoes'
+
+// As páginas com gráficos trazem a biblioteca de gráficos junto; carregadas sob demanda,
+// o login e as demais telas não precisam baixar esse código.
+const Painel = lazy(() => import('@/pages/Painel').then((module) => ({ default: module.Painel })))
+const Relatorios = lazy(() => import('@/pages/Relatorios').then((module) => ({ default: module.Relatorios })))
 
 export default function App() {
   return (

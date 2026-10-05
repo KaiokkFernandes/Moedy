@@ -13,6 +13,7 @@ function useInvalidateAccounts() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ['accounts'] }),
       queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+      queryClient.invalidateQueries({ queryKey: ['reports'] }),
     ])
 }
 

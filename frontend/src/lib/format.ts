@@ -21,3 +21,40 @@ export function toISODate(date: Date) {
 export function pluralize(quantidade: number, singular: string, plural: string) {
   return `${quantidade} ${quantidade === 1 ? singular : plural}`
 }
+
+const compact = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
+
+/** Valor em centavos de forma curta, para eixos de gráfico: 150000 → "R$ 1,5 mil". */
+export function formatCompactCurrency(centavos: number) {
+  return `R$ ${compact.format(centavos / 100)}`
+}
+
+const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+
+/** 12.5 → "12,5%". */
+export function formatPercent(value: number) {
+  return `${percent.format(value)}%`
+}
+
+const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+const MONTHS_LONG = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+]
+
+/** "2026-10" → "out/26". */
+export function formatMonthShort(mes: string) {
+  const [ano, numero] = mes.split('-')
+  return `${MONTHS_SHORT[Number(numero) - 1]}/${ano!.slice(2)}`
+}
+
+/** "2026-10" → "outubro de 2026". */
+export function formatMonthLong(mes: string) {
+  const [ano, numero] = mes.split('-')
+  return `${MONTHS_LONG[Number(numero) - 1]} de ${ano}`
+}
+
+/** "2026-10" → "outubro". */
+export function formatMonthName(mes: string) {
+  return MONTHS_LONG[Number(mes.split('-')[1]) - 1]!
+}

@@ -38,6 +38,8 @@ export interface Transaction {
   /** AAAA-MM-DD */
   data: string
   tipo: TransactionType
+  /** Transferência entre contas ou pagamento de fatura: não entra em relatórios nem nos totais. */
+  ignorarNosRelatorios: boolean
   category: Pick<Category, 'id' | 'nome' | 'cor' | 'icone'> | null
   account: Pick<Account, 'id' | 'nome'>
 }
@@ -49,6 +51,7 @@ export interface TransactionInput {
   valor: number
   data: string
   tipo: TransactionType
+  ignorarNosRelatorios: boolean
 }
 
 export interface TransactionFilters {

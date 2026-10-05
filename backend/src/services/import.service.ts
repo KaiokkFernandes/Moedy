@@ -3,6 +3,7 @@ import { decodeFile } from "../lib/import/encoding.js";
 import { parseOfx } from "../lib/import/ofx.js";
 import { ImportFileError, type ParseResult } from "../lib/import/types.js";
 import { prisma } from "../lib/prisma.js";
+import { normalizeText } from "../lib/text.js";
 import { AppError } from "../middlewares/errorHandler.js";
 import type { ConfirmInput, CsvMappingInput } from "../schemas/import.schema.js";
 import { getMatcher } from "./categoryRule.service.js";
@@ -13,6 +14,19 @@ interface UploadedFile {
 }
 
 const CSV_SAMPLE_ROWS = 5;
+
+/** Descrições típicas de pagamento de fatura e de transferência entre contas do próprio titular. */
+const TRANSFER_PATTERNS = [
+  /\b(pagamento|pagto|pgto|pag)\.? (de |da )?fatura\b/,
+  /\bfatura (do |de )?cartao\b/,
+  /\btransf(erencia)?\.? entre contas\b/,
+  /\bmesma titularidade\b/,
+];
+
+function looksLikeTransfer(descricao: string) {
+  const text = normalizeText(descricao);
+  return TRANSFER_PATTERNS.some((pattern) => pattern.test(text));
+}
 
 async function assertAccountOwned(userId: string, accountId: string) {
   const account = await prisma.account.findFirst({ where: { id: accountId, userId } });
@@ -35,6 +49,8 @@ async function buildReview(userId: string, accountId: string, formato: "ofx" | "
   const itens = parsed.itens.map((item) => ({
     ...item,
     categoryId: match(item.descricao, item.tipo),
+    // Só uma sugestão: o usuário confirma ou desmarca na revisão
+    ignorarNosRelatorios: looksLikeTransfer(item.descricao),
     duplicada: existingIds.has(item.externalId),
   }));
   const duplicadas = itens.filter((item) => item.duplicada).length;

@@ -10,6 +10,8 @@ export interface SeedTransaction {
   valor: number;
   data: Date;
   tipo: TransactionType;
+  /** Transferências e pagamentos de fatura, que não contam como receita/despesa. */
+  ignorarNosRelatorios?: boolean;
 }
 
 /** Gerador pseudoaleatório com semente, para o seed produzir sempre os mesmos dados. */
@@ -127,6 +129,31 @@ export function buildSeedTransactions(hoje = new Date(), dias = 92): SeedTransac
         tipo: variavel.tipo ?? "DESPESA",
       });
     });
+  }
+
+  // Pagamento da fatura: todo dia 10, o que foi gasto no cartão no mês anterior sai da conta
+  // corrente e entra no cartão. É só dinheiro mudando de conta, então fica fora dos relatórios.
+  const gastoNoCartao = new Map<string, number>();
+  for (const transaction of transactions) {
+    if (transaction.conta !== "cartao" || transaction.tipo !== "DESPESA") continue;
+    const mes = transaction.data.toISOString().slice(0, 7);
+    gastoNoCartao.set(mes, (gastoNoCartao.get(mes) ?? 0) + transaction.valor);
+  }
+
+  for (let time = fim - (dias - 1) * DAY_MS; time <= fim; time += DAY_MS) {
+    const data = new Date(time);
+    if (data.getUTCDate() !== 10) continue;
+
+    const mesAnterior = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth() - 1, 1)).toISOString().slice(0, 7);
+    const valor = gastoNoCartao.get(mesAnterior);
+    if (!valor) continue;
+
+    const iso = data.toISOString().slice(0, 10);
+    const comum = { categoria: null, valor, data, ignorarNosRelatorios: true };
+    transactions.push(
+      { ...comum, externalId: `seed-${iso}-fatura-saida`, conta: "corrente", descricao: "Pagamento fatura cartão", tipo: "DESPESA" },
+      { ...comum, externalId: `seed-${iso}-fatura-entrada`, conta: "cartao", descricao: "Pagamento recebido - obrigado", tipo: "RECEITA" },
+    );
   }
 
   return transactions;

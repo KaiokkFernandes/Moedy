@@ -18,6 +18,7 @@ export const transactionSchema = z.object({
     .max(MAX_CENTAVOS, "Valor muito alto"),
   data: dateSchema,
   tipo: transactionTypeSchema,
+  ignorarNosRelatorios: z.boolean({ error: "Use true ou false" }).default(false),
 });
 
 export const transactionCategorySchema = z.object({
