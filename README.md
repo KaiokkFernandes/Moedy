@@ -33,7 +33,14 @@ Depois, crie o arquivo de ambiente do backend e aplique as migrations:
 ```bash
 cp backend/.env.example backend/.env
 yarn prisma:migrate
+yarn seed
 ```
+
+O `yarn seed` cria o usuário de teste definido no `backend/.env` (pode rodar mais de uma vez):
+
+| Email             | Senha        |
+| ----------------- | ------------ |
+| `teste@moedy.dev` | `teste12345` |
 
 > O Yarn 4 bloqueia scripts de build de dependências por padrão. Os pacotes que precisam deles
 > (Prisma, better-sqlite3, esbuild) estão liberados em `dependenciesMeta` no `package.json` da raiz.
@@ -69,7 +76,10 @@ yarn dev:frontend
 ```bash
 yarn prisma:migrate   # cria/aplica migrations (prisma migrate dev)
 yarn prisma:studio    # abre o Prisma Studio no navegador
+yarn seed             # cria/atualiza o usuário de teste e as categorias padrão
 ```
+
+Valores monetários são sempre guardados em **centavos** (inteiros), nunca em ponto flutuante.
 
 O banco SQLite fica em `backend/dev.db`.
 
@@ -80,3 +90,17 @@ O banco SQLite fica em `backend/dev.db`.
 | `PORT`         | `3333`                             |
 | `DATABASE_URL` | `file:./dev.db`                    |
 | `JWT_SECRET`   | `troque-este-segredo-em-producao`  |
+| `SEED_USER_NOME` / `SEED_USER_EMAIL` / `SEED_USER_SENHA` | usuário de teste do seed |
+
+## Autenticação
+
+| Rota                      | Descrição                                              |
+| ------------------------- | ------------------------------------------------------ |
+| `POST /api/auth/register` | `{ nome, email, senha }` (senha com 8+ caracteres) → `{ token, user }` |
+| `POST /api/auth/login`    | `{ email, senha }` → `{ token, user }`                 |
+| `GET /api/auth/me`        | usuário logado (header `Authorization: Bearer <token>`) |
+
+Erros seguem o formato `{ "error": "mensagem" }`: **400** validação (com `issues: [{ campo, mensagem }]`),
+**401** não autenticado, **409** email já cadastrado. Todo usuário novo recebe as categorias padrão.
+
+No frontend, o token fica no `localStorage`; rotas da área logada redirecionam para `/login` sem sessão.

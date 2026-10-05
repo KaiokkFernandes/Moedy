@@ -7,10 +7,113 @@ datasource db {
   provider = "sqlite"
 }
 
+// Valores monetários (saldoInicial, valor, valorLimite) são sempre guardados em centavos (Int).
+
+enum AccountType {
+  CORRENTE
+  POUPANCA
+  CARTAO
+  DINHEIRO
+}
+
+enum AccountOrigin {
+  MANUAL
+  IMPORT
+  PLUGGY
+}
+
+enum TransactionType {
+  DESPESA
+  RECEITA
+}
+
 model User {
   id        String   @id @default(uuid())
   nome      String
   email     String   @unique
   senha     String
   createdAt DateTime @default(now())
+
+  accounts      Account[]
+  categories    Category[]
+  budgets       Budget[]
+  categoryRules CategoryRule[]
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  userId       String
+  nome         String
+  tipo         AccountType
+  saldoInicial Int           @default(0)
+  origem       AccountOrigin @default(MANUAL)
+  externalId   String?
+  createdAt    DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+model Category {
+  id     String          @id @default(uuid())
+  userId String
+  nome   String
+  cor    String
+  icone  String
+  tipo   TransactionType
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  budgets      Budget[]
+  rules        CategoryRule[]
+
+  @@unique([userId, nome, tipo])
+}
+
+model Transaction {
+  id         String          @id @default(uuid())
+  accountId  String
+  categoryId String?
+  descricao  String
+  valor      Int
+  data       DateTime
+  tipo       TransactionType
+  externalId String?
+  createdAt  DateTime        @default(now())
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // Evita duplicatas na importação (no SQLite, vários externalId nulos não conflitam).
+  @@unique([accountId, externalId])
+  @@index([accountId, data])
+  @@index([categoryId])
+}
+
+model Budget {
+  id          String @id @default(uuid())
+  userId      String
+  categoryId  String
+  valorLimite Int
+  mes         Int
+  ano         Int
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, mes, ano])
+}
+
+model CategoryRule {
+  id           String @id @default(uuid())
+  userId       String
+  palavraChave String
+  categoryId   String
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
