@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
 import { FormAlert } from '@/components/FormAlert'
-import { FormField } from '@/components/FormField'
-import { SubmitButton } from '@/components/SubmitButton'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { getErrorMessage, getFieldErrors } from '@/lib/api'
 import { onlyErrors, validateEmail } from '@/lib/validation'
@@ -70,14 +70,14 @@ export function Register() {
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <FormAlert message={formError} />
-        <FormField
+        <Input
           label="Nome"
           autoComplete="name"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           error={errors.nome}
         />
-        <FormField
+        <Input
           label="Email"
           type="email"
           autoComplete="email"
@@ -86,7 +86,7 @@ export function Register() {
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
         />
-        <FormField
+        <Input
           label="Senha"
           type="password"
           autoComplete="new-password"
@@ -95,7 +95,7 @@ export function Register() {
           onChange={(e) => setSenha(e.target.value)}
           error={errors.senha}
         />
-        <FormField
+        <Input
           label="Confirmar senha"
           type="password"
           autoComplete="new-password"
@@ -103,7 +103,7 @@ export function Register() {
           onChange={(e) => setConfirmacao(e.target.value)}
           error={errors.confirmacao}
         />
-        <SubmitButton loading={loading}>{loading ? 'Criando conta…' : 'Criar conta'}</SubmitButton>
+        <Button type="submit" fullWidth loading={loading}>Criar conta</Button>
       </form>
     </AuthLayout>
   )

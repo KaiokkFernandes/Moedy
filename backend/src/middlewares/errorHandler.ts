@@ -5,6 +5,8 @@ export class AppError extends Error {
   constructor(
     message: string,
     public readonly statusCode = 400,
+    /** Campos extras devolvidos junto com a mensagem (ex.: quantas transações bloqueiam a exclusão). */
+    public readonly details: Record<string, unknown> = {},
   ) {
     super(message);
     this.name = "AppError";
@@ -25,7 +27,13 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({ error: err.message });
+    res.status(err.statusCode).json({ error: err.message, ...err.details });
+    return;
+  }
+
+  // Violação de índice único do banco (ex.: duas requisições simultâneas criando o mesmo registro)
+  if (err?.code === "P2002") {
+    res.status(409).json({ error: "Já existe um registro com esses dados" });
     return;
   }
 

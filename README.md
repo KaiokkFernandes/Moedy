@@ -57,7 +57,8 @@ yarn prisma:migrate
 yarn seed
 ```
 
-O `yarn seed` cria o usuário de teste definido no `backend/.env` (pode rodar mais de uma vez):
+O `yarn seed` cria o usuário de teste definido no `backend/.env`, com duas contas (corrente e cartão) e cerca de
+3 meses de transações fictícias. Pode rodar mais de uma vez sem duplicar nada:
 
 | Email             | Senha        |
 | ----------------- | ------------ |
@@ -124,5 +125,21 @@ porta `5432`, usuário `moedy`, senha `moedy` e banco `moedy`.
 
 Erros seguem o formato `{ "error": "mensagem" }`: **400** validação (com `issues: [{ campo, mensagem }]`),
 **401** não autenticado, **409** email já cadastrado. Todo usuário novo recebe as categorias padrão.
+
+## API
+
+Todas as rotas abaixo exigem `Authorization: Bearer <token>` e só enxergam os dados do usuário logado
+(recursos de outro usuário respondem **404**). Valores são sempre em **centavos**; datas, em `AAAA-MM-DD`.
+
+| Recurso | Rotas |
+| ------- | ----- |
+| Contas | `GET /api/accounts` (com `saldoAtual` e `totalTransacoes`), `POST`, `PUT /:id`, `DELETE /:id` |
+| Categorias | `GET /api/categories?tipo=`, `POST`, `PUT /:id`, `DELETE /:id` |
+| Transações | `GET /api/transactions`, `POST`, `PUT /:id`, `PATCH /:id/category`, `DELETE /:id` |
+
+- **Excluir conta com transações** responde 409 até receber `?confirm=true`, porque apaga as transações junto.
+- **Excluir categoria** não apaga transações: elas ficam sem categoria.
+- **Filtros de transações:** `dataInicio`, `dataFim`, `accountId`, `categoryId`, `tipo`, `busca`, `semCategoria`,
+  `page` e `pageSize` (máx. 100). A resposta traz `itens`, `total`, `totalReceitas` e `totalDespesas` do filtro.
 
 No frontend, o token fica no `localStorage`; rotas da área logada redirecionam para `/login` sem sessão.

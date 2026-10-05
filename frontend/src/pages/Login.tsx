@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
 import { FormAlert } from '@/components/FormAlert'
-import { FormField } from '@/components/FormField'
-import { SubmitButton } from '@/components/SubmitButton'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
 import { getErrorMessage } from '@/lib/api'
 import { onlyErrors, validateEmail } from '@/lib/validation'
@@ -52,7 +52,7 @@ export function Login() {
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <FormAlert message={formError} />
-        <FormField
+        <Input
           label="Email"
           type="email"
           autoComplete="email"
@@ -61,7 +61,7 @@ export function Login() {
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
         />
-        <FormField
+        <Input
           label="Senha"
           type="password"
           autoComplete="current-password"
@@ -69,7 +69,7 @@ export function Login() {
           onChange={(e) => setSenha(e.target.value)}
           error={errors.senha}
         />
-        <SubmitButton loading={loading}>{loading ? 'Entrando…' : 'Entrar'}</SubmitButton>
+        <Button type="submit" fullWidth loading={loading}>Entrar</Button>
       </form>
     </AuthLayout>
   )

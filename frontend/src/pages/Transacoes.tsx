@@ -1,5 +1,205 @@
-import { PageTitle } from '@/components/PageTitle'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import clsx from 'clsx'
+import { ArrowLeftRight, Landmark, Plus } from 'lucide-react'
+import { PageHeader } from '@/components/PageHeader'
+import { TransactionFilters } from '@/components/transactions/TransactionFilters'
+import { TransactionFormModal } from '@/components/transactions/TransactionFormModal'
+import { TransactionList } from '@/components/transactions/TransactionList'
+import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { Pagination } from '@/components/ui/Pagination'
+import { EmptyState, ErrorState, Loading } from '@/components/ui/States'
+import { useAccounts } from '@/hooks/useAccounts'
+import { useCategories } from '@/hooks/useCategories'
+import { PAGE_SIZE, useTransactionFilters } from '@/hooks/useTransactionFilters'
+import { useDeleteTransaction, useTransactions } from '@/hooks/useTransactions'
+import { getErrorMessage } from '@/lib/api'
+import { formatCurrency, formatDate } from '@/lib/format'
+import type { Transaction } from '@/types/finance'
+
+/** `null` = modal fechado; `{}` = nova transação; `{ transaction }` = edição. */
+type FormState = { transaction?: Transaction } | null
+
+function SummaryCard({ label, value, className }: { label: string; value: number; className: string }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className={clsx('mt-1 text-xl font-semibold tabular-nums', className)}>{formatCurrency(value)}</p>
+    </div>
+  )
+}
 
 export function Transacoes() {
-  return <PageTitle>Transações</PageTitle>
+  const filters = useTransactionFilters()
+  const accounts = useAccounts()
+  const categories = useCategories()
+  const transactions = useTransactions(filters.apiFilters)
+  const deleteTransaction = useDeleteTransaction()
+  const [form, setForm] = useState<FormState>(null)
+  const [deleting, setDeleting] = useState<Transaction | null>(null)
+
+  // Se a página atual ficou vazia (ex.: excluiu o último item dela), volta para a última que existe
+  const { setPage } = filters
+  const total = transactions.data?.total
+  const pagina = filters.values.pagina
+  useEffect(() => {
+    if (total === undefined || transactions.isPlaceholderData) return
+    const ultima = Math.max(1, Math.ceil(total / PAGE_SIZE))
+    if (pagina > ultima) setPage(ultima)
+  }, [total, pagina, setPage, transactions.isPlaceholderData])
+
+  function closeDelete() {
+    setDeleting(null)
+    deleteTransaction.reset()
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return
+    try {
+      await deleteTransaction.mutateAsync(deleting.id)
+      closeDelete()
+    } catch {
+      // O erro aparece dentro do diálogo
+    }
+  }
+
+  if (accounts.isPending || categories.isPending) {
+    return (
+      <>
+        <PageHeader title="Transações" />
+        <Loading />
+      </>
+    )
+  }
+
+  if (accounts.isError || categories.isError) {
+    return (
+      <>
+        <PageHeader title="Transações" />
+        <ErrorState
+          message={getErrorMessage(accounts.error ?? categories.error, 'Não foi possível carregar os dados.')}
+          onRetry={() => {
+            accounts.refetch()
+            categories.refetch()
+          }}
+        />
+      </>
+    )
+  }
+
+  // Toda transação pertence a uma conta
+  if (accounts.data.length === 0) {
+    return (
+      <>
+        <PageHeader title="Transações" />
+        <EmptyState
+          icon={Landmark}
+          title="Cadastre uma conta primeiro"
+          description="Toda transação pertence a uma conta. Crie sua primeira conta para começar a lançar."
+          action={
+            <Link
+              to="/contas"
+              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              Ir para Contas
+            </Link>
+          }
+        />
+      </>
+    )
+  }
+
+  const newButton = (
+    <Button onClick={() => setForm({})}>
+      <Plus className="size-4" aria-hidden />
+      Nova transação
+    </Button>
+  )
+
+  const data = transactions.data
+
+  return (
+    <>
+      <PageHeader title="Transações" action={newButton} />
+
+      <TransactionFilters filters={filters} accounts={accounts.data} categories={categories.data} />
+
+      {transactions.isPending ? (
+        <Loading />
+      ) : transactions.isError || !data ? (
+        <ErrorState
+          message={getErrorMessage(transactions.error, 'Não foi possível carregar as transações.')}
+          onRetry={transactions.refetch}
+        />
+      ) : (
+        <div
+          aria-busy={transactions.isFetching}
+          className={clsx('transition-opacity', transactions.isPlaceholderData && 'opacity-60')}
+        >
+          <div className="mb-6 grid gap-3 sm:grid-cols-3">
+            <SummaryCard label="Receitas" value={data.totalReceitas} className="text-emerald-600" />
+            <SummaryCard label="Despesas" value={data.totalDespesas} className="text-red-600" />
+            <SummaryCard
+              label="Saldo do período"
+              value={data.totalReceitas - data.totalDespesas}
+              className={data.totalReceitas - data.totalDespesas < 0 ? 'text-red-600' : 'text-slate-900'}
+            />
+          </div>
+
+          {data.total === 0 ? (
+            <EmptyState
+              icon={ArrowLeftRight}
+              title="Nenhuma transação encontrada"
+              description="Não há transações para os filtros escolhidos. Mude o período ou os filtros, ou lance uma nova."
+              action={newButton}
+            />
+          ) : (
+            <>
+              <TransactionList
+                transactions={data.itens}
+                categories={categories.data}
+                onEdit={(transaction) => setForm({ transaction })}
+                onDelete={setDeleting}
+              />
+              <div className="mt-4">
+                <Pagination page={data.page} pageSize={data.pageSize} total={data.total} onChange={filters.setPage} />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      <TransactionFormModal
+        open={form !== null}
+        transaction={form?.transaction}
+        accounts={accounts.data}
+        categories={categories.data}
+        defaultAccountId={filters.values.conta}
+        onClose={() => setForm(null)}
+      />
+
+      <ConfirmDialog
+        open={deleting !== null}
+        onClose={closeDelete}
+        onConfirm={confirmDelete}
+        title="Excluir transação"
+        confirmLabel="Excluir transação"
+        loading={deleteTransaction.isPending}
+        error={
+          deleteTransaction.isError
+            ? getErrorMessage(deleteTransaction.error, 'Não foi possível excluir a transação.')
+            : ''
+        }
+      >
+        {deleting && (
+          <p>
+            Excluir <strong className="text-slate-900">{deleting.descricao}</strong>, de {formatDate(deleting.data)}, no
+            valor de {formatCurrency(deleting.valor)}?
+          </p>
+        )}
+        <p>Essa ação não pode ser desfeita.</p>
+      </ConfirmDialog>
+    </>
+  )
 }
