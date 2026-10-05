@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { categoryRuleSchema } from "../schemas/categoryRule.schema.js";
 import { idParamSchema } from "../schemas/common.schema.js";
+import { checkAlertsSafely } from "../services/alert.service.js";
 import * as categoryRuleService from "../services/categoryRule.service.js";
 
 export const list: RequestHandler = async (req, res) => {
@@ -25,5 +26,7 @@ export const remove: RequestHandler = async (req, res) => {
 };
 
 export const apply: RequestHandler = async (req, res) => {
-  res.json(await categoryRuleService.applyToUncategorized(req.userId));
+  const result = await categoryRuleService.applyToUncategorized(req.userId);
+  if (result.categorizadas > 0) await checkAlertsSafely(req.userId);
+  res.json(result);
 };

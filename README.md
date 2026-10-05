@@ -59,7 +59,8 @@ yarn seed
 
 O `yarn seed` cria o usuário de teste definido no `backend/.env`, com duas contas (corrente e cartão), cerca de
 3 meses de transações fictícias (incluindo o pagamento mensal da fatura do cartão, marcado para ficar fora dos
-relatórios) e as regras de categorização padrão. Pode rodar mais de uma vez sem duplicar nada:
+relatórios), as regras de categorização padrão e orçamentos no mês atual (um estourado, um em atenção e os
+demais dentro do limite), com os alertas correspondentes. Pode rodar mais de uma vez sem duplicar nada:
 
 | Email             | Senha        |
 | ----------------- | ------------ |
@@ -139,6 +140,8 @@ Todas as rotas abaixo exigem `Authorization: Bearer <token>` e só enxergam os d
 | Transações | `GET /api/transactions`, `POST`, `PUT /:id`, `PATCH /:id/category`, `DELETE /:id` |
 | Regras | `GET /api/category-rules`, `POST`, `PUT /:id`, `DELETE /:id`, `POST /api/category-rules/apply` |
 | Importação | `POST /api/import/preview`, `POST /api/import/confirm` |
+| Orçamentos | `GET /api/budgets?mes=&ano=`, `POST`, `PUT /:id`, `DELETE /:id`, `POST /copy`, `GET /suggestions`, `POST /from-suggestions` |
+| Alertas | `GET /api/notifications`, `GET /unread-count`, `PATCH /:id/read`, `POST /read-all`, `DELETE /:id` |
 | Relatórios | `GET /api/reports/summary`, `by-category`, `monthly`, `daily`, `top-merchants`, `largest-expenses`, `recurring`, `category-trend`, `export` |
 
 - **Excluir conta com transações** responde 409 até receber `?confirm=true`, porque apaga as transações junto.
@@ -171,6 +174,31 @@ mês atual). As somas e os agrupamentos são feitos pelo banco.
   os relatórios e dos totais da listagem de transações, mas continuam contando no saldo das contas. A marcação
   é feita na edição da transação ou na revisão da importação (que já sugere para descrições como "pagamento de
   fatura"). O CSV exportado traz todas, com a coluna "Fora dos relatórios".
+
+## Orçamentos e alertas
+
+Um orçamento é o limite de gasto de uma categoria de despesa em um mês (um por categoria por mês). O gasto usa
+a mesma regra dos relatórios: só despesas, sem as transações marcadas para ignorar.
+
+- `GET /api/budgets?mes=&ano=` devolve cada orçamento com gasto, restante, percentual e status (`OK`, `ATENCAO`
+  a partir de 80%, `ESTOURADO` a partir de 100%), o resumo do mês e as categorias com gasto e sem orçamento.
+- **Projeção** (só no mês atual): as cobranças fixas detectadas contam uma vez, e o resto do gasto é projetado
+  no ritmo atual (gasto por dia até hoje × dias do mês).
+- `POST /api/budgets/copy` copia de um mês para outro sem sobrescrever os que já existem.
+- `GET /api/budgets/suggestions` sugere a média dos últimos 3 meses, arredondada para cima em múltiplos de R$ 10;
+  `POST /api/budgets/from-suggestions` cria de uma vez os sugeridos que faltam.
+
+Os alertas são gerados depois de criar ou editar uma transação e, uma única vez, no fim de uma importação (uma
+falha nos alertas não derruba a importação). Cada alerta tem uma chave única e nunca se repete, mesmo depois de
+lido ou excluído:
+
+| Alerta | Quando |
+| ------ | ------ |
+| Orçamento em atenção / estourado | Ao passar de 80% e de 100%, uma vez por orçamento para cada nível |
+| Orçamento pode estourar | A projeção passa do limite (a partir do dia 5 do mês) |
+| Despesa acima do normal | Mais de 3x a média da categoria nos últimos 3 meses (mínimo de 3 despesas e de R$ 50) |
+| Nova cobrança recorrente | Uma cobrança completa 3 meses seguidos |
+| Recorrente mudou de valor | Diferença de mais de 5% em relação à última cobrança |
 
 ## Importação de extrato (OFX e CSV)
 

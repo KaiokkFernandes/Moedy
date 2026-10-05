@@ -68,4 +68,6 @@ export type ImportPreview = CsvMappingStep | ImportReview
 export interface ImportResult {
   importadas: number
   ignoradas: number
+  /** Alertas novos gerados pela importação (orçamentos, despesas atípicas, recorrentes). */
+  alertas: number
 }

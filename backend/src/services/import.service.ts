@@ -140,12 +140,18 @@ export async function confirm(userId: string, { accountId, itens }: ConfirmInput
   // Uma única instrução dentro de uma transação do banco: ou grava tudo, ou nada.
   // O índice único (accountId, externalId) faz o skipDuplicates ignorar o que já existe
   // na conta e também itens repetidos dentro da própria lista.
-  const { count } = await prisma.$transaction((tx) =>
-    tx.transaction.createMany({
+  const created = await prisma.$transaction((tx) =>
+    tx.transaction.createManyAndReturn({
       skipDuplicates: true,
       data: itens.map((item) => ({ ...item, accountId })),
+      select: { id: true },
     }),
   );
 
-  return { importadas: count, ignoradas: itens.length - count };
+  return {
+    importadas: created.length,
+    ignoradas: itens.length - created.length,
+    /** Ids das transações criadas, para a verificação de alertas. */
+    ids: created.map((transaction) => transaction.id),
+  };
 }

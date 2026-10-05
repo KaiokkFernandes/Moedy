@@ -1,6 +1,7 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import * as transactionsService from '@/services/transactions'
 import type { TransactionFilters, TransactionInput } from '@/types/finance'
+import { useInvalidateFinance } from './useInvalidateFinance'
 
 export function useTransactions(filters: TransactionFilters) {
   return useQuery({
@@ -11,19 +12,8 @@ export function useTransactions(filters: TransactionFilters) {
   })
 }
 
-// Transações mudam o saldo e a contagem das contas
-function useInvalidateTransactions() {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['transactions'] }),
-      queryClient.invalidateQueries({ queryKey: ['accounts'] }),
-      queryClient.invalidateQueries({ queryKey: ['reports'] }),
-    ])
-}
-
 export function useSaveTransaction() {
-  const invalidate = useInvalidateTransactions()
+  const invalidate = useInvalidateFinance()
   return useMutation({
     mutationFn: ({ id, data }: { id?: string; data: TransactionInput }) =>
       id ? transactionsService.update(id, data) : transactionsService.create(data),
@@ -32,7 +22,7 @@ export function useSaveTransaction() {
 }
 
 export function useUpdateTransactionCategory() {
-  const invalidate = useInvalidateTransactions()
+  const invalidate = useInvalidateFinance()
   return useMutation({
     mutationFn: ({ id, categoryId }: { id: string; categoryId: string | null }) =>
       transactionsService.updateCategory(id, categoryId),
@@ -41,6 +31,6 @@ export function useUpdateTransactionCategory() {
 }
 
 export function useDeleteTransaction() {
-  const invalidate = useInvalidateTransactions()
+  const invalidate = useInvalidateFinance()
   return useMutation({ mutationFn: transactionsService.remove, onSuccess: invalidate })
 }

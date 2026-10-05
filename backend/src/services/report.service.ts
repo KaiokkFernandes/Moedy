@@ -35,7 +35,7 @@ import { serializeTransaction, transactionInclude } from "./transaction.service.
 
 const SEM_CATEGORIA = { nome: "Sem categoria", cor: "#94a3b8", icone: "tag" };
 
-interface Period {
+export interface Period {
   inicio: Date;
   fim: Date;
 }
@@ -54,7 +54,7 @@ async function assertAccountOwned(userId: string, accountId: string | undefined)
   }
 }
 
-function reportWhere(userId: string, accountId: string | undefined, { inicio, fim }: Period): Prisma.TransactionWhereInput {
+export function reportWhere(userId: string, accountId: string | undefined, { inicio, fim }: Period): Prisma.TransactionWhereInput {
   return {
     account: { userId },
     accountId,
@@ -134,16 +134,29 @@ export async function summary(userId: string, query: PeriodQuery) {
   };
 }
 
+/**
+ * Total e quantidade de transações por categoria no período, somados pelo banco.
+ * É a regra única de "quanto foi gasto em uma categoria": os orçamentos usam a mesma função.
+ */
+export async function totalsByCategory(
+  userId: string,
+  period: Period,
+  tipo: TransactionType = "DESPESA",
+  accountId?: string,
+) {
+  return prisma.transaction.groupBy({
+    by: ["categoryId"],
+    where: { ...reportWhere(userId, accountId, period), tipo },
+    _sum: { valor: true },
+    _count: { _all: true },
+  });
+}
+
 export async function byCategory(userId: string, query: ByCategoryQuery) {
   await assertAccountOwned(userId, query.accountId);
   const period = resolvePeriod(query);
 
-  const groups = await prisma.transaction.groupBy({
-    by: ["categoryId"],
-    where: { ...reportWhere(userId, query.accountId, period), tipo: query.tipo },
-    _sum: { valor: true },
-    _count: { _all: true },
-  });
+  const groups = await totalsByCategory(userId, period, query.tipo, query.accountId);
 
   const categories = await prisma.category.findMany({
     where: { userId, id: { in: groups.flatMap((group) => (group.categoryId ? [group.categoryId] : [])) } },
@@ -423,7 +436,7 @@ export async function recurring(userId: string, query: RecurringQuery) {
   }
 
   const recorrentes = [];
-  for (const months of merchants.values()) {
+  for (const [chave, months] of merchants) {
     // Sequência de meses seguidos que termina na cobrança mais recente
     const lastKey = [...months.keys()].sort().at(-1)!;
     let cursor = new Date(`${lastKey}-01T00:00:00.000Z`);
@@ -447,6 +460,8 @@ export async function recurring(userId: string, query: RecurringQuery) {
     const last = streak.at(-1)!;
     const valorMedio = Math.round(streak.reduce((sum, month) => sum + month.total, 0) / streak.length);
     recorrentes.push({
+      /** Descrição normalizada, que identifica o estabelecimento (veja lib/merchant.ts). */
+      chave,
       nome: last.nome,
       valorMedio,
       ultimoValor: last.total,

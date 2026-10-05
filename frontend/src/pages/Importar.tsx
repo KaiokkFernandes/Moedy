@@ -245,6 +245,12 @@ export function Importar() {
             {step.result.ignoradas > 0 &&
               ` ${pluralize(step.result.ignoradas, 'transação ignorada', 'transações ignoradas')} por já ${step.result.ignoradas === 1 ? 'existir' : 'existirem'} na conta.`}
           </p>
+          {step.result.alertas > 0 && (
+            <p role="status" className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5 text-sm text-amber-900">
+              {step.result.alertas === 1 ? 'A importação gerou 1 alerta novo' : `A importação gerou ${step.result.alertas} alertas novos`}. Veja no
+              sino de alertas.
+            </p>
+          )}
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <Link
               to={`/transacoes?conta=${destino.id}&periodo=tudo`}

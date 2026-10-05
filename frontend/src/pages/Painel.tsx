@@ -1,5 +1,6 @@
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, CircleAlert, Landmark } from 'lucide-react'
+import { CircleAlert, Landmark } from 'lucide-react'
+import { BudgetProgress, BudgetStatusPill } from '@/components/budgets/BudgetProgress'
 import { CategoryDonut } from '@/components/charts/CategoryDonut'
 import { ChartCard } from '@/components/charts/ChartCard'
 import { DailyPaceChart } from '@/components/charts/DailyPaceChart'
@@ -8,9 +9,10 @@ import { Variation } from '@/components/charts/Variation'
 import { StatCard } from '@/components/dashboard/StatCard'
 import { TransactionMiniList } from '@/components/dashboard/TransactionMiniList'
 import { PageHeader } from '@/components/PageHeader'
-import { IconButton } from '@/components/ui/Button'
+import { MonthSelector } from '@/components/ui/MonthSelector'
 import { ErrorState } from '@/components/ui/States'
 import { useAccounts } from '@/hooks/useAccounts'
+import { useBudgets } from '@/hooks/useBudgets'
 import {
   useReportByCategory,
   useReportDaily,
@@ -20,7 +22,7 @@ import {
 } from '@/hooks/useReports'
 import { useTransactions } from '@/hooks/useTransactions'
 import { getErrorMessage } from '@/lib/api'
-import { formatCurrency, formatMonthLong, formatMonthName, formatMonthShort, pluralize } from '@/lib/format'
+import { formatCurrency, formatMonthName, formatMonthShort, formatPercent, pluralize } from '@/lib/format'
 import { currentMonth, monthPeriod, shiftMonth } from '@/lib/periods'
 import type { CategoryTotal } from '@/types/reports'
 
@@ -47,6 +49,7 @@ export function Painel() {
   const daily = useReportDaily({ dataFim: fim })
   const largest = useReportLargestExpenses({ ...range, limite: 5 })
   const latest = useTransactions({ ...range, page: 1, pageSize: 5 })
+  const budgets = useBudgets({ ano: Number(mes.slice(0, 4)), mes: Number(mes.slice(5, 7)) })
   // Só a contagem das transações sem categoria, em qualquer período
   const uncategorized = useTransactions({ semCategoria: true, page: 1, pageSize: 1 })
 
@@ -68,17 +71,7 @@ export function Painel() {
       <PageHeader
         title="Painel"
         action={
-          <div className="flex items-center gap-1 rounded-xl bg-white p-1 ring-1 ring-slate-200">
-            <IconButton label="Mês anterior" onClick={() => setMes(shiftMonth(mes, -1))}>
-              <ChevronLeft className="size-4" />
-            </IconButton>
-            <span aria-live="polite" className="min-w-36 text-center text-sm font-medium text-slate-900 first-letter:uppercase">
-              {formatMonthLong(mes)}
-            </span>
-            <IconButton label="Próximo mês" disabled={mes >= atual} onClick={() => setMes(shiftMonth(mes, 1))}>
-              <ChevronRight className="size-4" />
-            </IconButton>
-          </div>
+          <MonthSelector mes={mes} onChange={setMes} max={atual} />
         }
       />
 
@@ -199,6 +192,42 @@ export function Painel() {
           }
         >
           {daily.data && <DailyPaceChart {...daily.data} />}
+        </ChartCard>
+
+        <ChartCard
+          className="lg:col-span-2"
+          title="Orçamentos do mês"
+          subtitle="Os 3 mais perto do limite"
+          action={
+            <Link to={`/orcamentos${mes === atual ? '' : `?mes=${mes}`}`} className={seeAllClass}>
+              Ver orçamentos
+            </Link>
+          }
+          query={budgets}
+          empty={!budgets.data || budgets.data.orcamentos.length === 0}
+          emptyMessage="Nenhum orçamento neste mês. Defina limites por categoria na página Orçamentos."
+        >
+          {budgets.data && (
+            <ul className="grid gap-x-8 gap-y-4 md:grid-cols-3">
+              {/* A API já devolve os orçamentos do mais perto (ou além) do limite para o mais folgado */}
+              {budgets.data.orcamentos.slice(0, 3).map((budget) => (
+                <li key={budget.id}>
+                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-medium text-slate-900">{budget.categoria.nome}</span>
+                    <BudgetStatusPill status={budget.status} />
+                  </div>
+                  <BudgetProgress
+                    percentual={budget.percentual}
+                    status={budget.status}
+                    label={`Orçamento de ${budget.categoria.nome}`}
+                  />
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    {formatCurrency(budget.gasto)} de {formatCurrency(budget.valorLimite)} ({formatPercent(budget.percentual)})
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
         </ChartCard>
 
         <ChartCard

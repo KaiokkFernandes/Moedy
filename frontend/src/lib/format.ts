@@ -58,3 +58,15 @@ export function formatMonthLong(mes: string) {
 export function formatMonthName(mes: string) {
   return MONTHS_LONG[Number(mes.split('-')[1]) - 1]!
 }
+
+/** Tempo decorrido desde uma data ISO: "agora", "há 5 min", "há 3 h", "há 2 dias" ou a data. */
+export function formatRelativeTime(iso: string) {
+  const minutos = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
+  if (minutos < 1) return 'agora'
+  if (minutos < 60) return `há ${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `há ${horas} h`
+  const dias = Math.floor(horas / 24)
+  if (dias < 7) return dias === 1 ? 'há 1 dia' : `há ${dias} dias`
+  return formatDate(toISODate(new Date(iso)))
+}

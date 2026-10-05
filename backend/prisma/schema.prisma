@@ -27,6 +27,15 @@ enum TransactionType {
   RECEITA
 }
 
+enum NotificationType {
+  ORCAMENTO_ATENCAO
+  ORCAMENTO_ESTOURADO
+  ORCAMENTO_PROJECAO
+  DESPESA_ATIPICA
+  RECORRENTE_NOVA
+  RECORRENTE_VALOR
+}
+
 model User {
   id        String   @id @default(uuid())
   nome      String
@@ -38,6 +47,7 @@ model User {
   categories    Category[]
   budgets       Budget[]
   categoryRules CategoryRule[]
+  notifications Notification[]
 }
 
 model Account {
@@ -119,4 +129,26 @@ model CategoryRule {
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  tipo      NotificationType
+  titulo    String
+  mensagem  String
+  // Caminho da página relacionada no app (ex.: /orcamentos?mes=2026-10)
+  link      String?
+  lida      Boolean          @default(false)
+  // Alertas excluídos pelo usuário ficam ocultos em vez de apagados: a chave continua ocupada,
+  // então o mesmo alerta não é recriado na próxima verificação
+  excluida  Boolean          @default(false)
+  // Identifica o motivo do alerta (ex.: "orcamento:<id>:estourado"), para ele nunca se repetir
+  chave     String
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, chave])
+  @@index([userId, excluida, lida, createdAt])
 }

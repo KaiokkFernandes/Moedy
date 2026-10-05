@@ -1,0 +1,29 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { formatMonthLong } from '@/lib/format'
+import { shiftMonth } from '@/lib/periods'
+import { IconButton } from './Button'
+
+interface MonthSelectorProps {
+  /** Mês selecionado, "AAAA-MM". */
+  mes: string
+  onChange: (mes: string) => void
+  /** Último mês que pode ser escolhido ("AAAA-MM"). */
+  max?: string
+}
+
+/** Navegação mês a mês: ‹ outubro de 2026 › */
+export function MonthSelector({ mes, onChange, max }: MonthSelectorProps) {
+  return (
+    <div className="flex items-center gap-1 rounded-xl bg-white p-1 ring-1 ring-slate-200">
+      <IconButton label="Mês anterior" onClick={() => onChange(shiftMonth(mes, -1))}>
+        <ChevronLeft className="size-4" />
+      </IconButton>
+      <span aria-live="polite" className="min-w-36 text-center text-sm font-medium text-slate-900 first-letter:uppercase">
+        {formatMonthLong(mes)}
+      </span>
+      <IconButton label="Próximo mês" disabled={max !== undefined && mes >= max} onClick={() => onChange(shiftMonth(mes, 1))}>
+        <ChevronRight className="size-4" />
+      </IconButton>
+    </div>
+  )
+}

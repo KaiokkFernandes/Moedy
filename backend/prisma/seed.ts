@@ -2,10 +2,13 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import type { AccountType } from "../src/generated/prisma/client.js";
 import { DEFAULT_CATEGORIES } from "../src/lib/defaultCategories.js";
+import { endOfMonth, startOfMonth, todayInSaoPaulo } from "../src/lib/dates.js";
 import { prisma } from "../src/lib/prisma.js";
 import { registerSchema } from "../src/schemas/auth.schema.js";
+import { checkAlerts } from "../src/services/alert.service.js";
 import { createUserWithDefaults } from "../src/services/auth.service.js";
 import { ensureDefaultRules } from "../src/services/categoryRule.service.js";
+import { totalsByCategory } from "../src/services/report.service.js";
 import { buildSeedTransactions } from "./seedTransactions.js";
 
 // As credenciais do usuário de teste vêm do .env (veja o .env.example).
@@ -77,5 +80,37 @@ const { count } = await prisma.transaction.createMany({
 });
 
 console.log(`✅ Contas de exemplo prontas; ${count} transações novas criadas`);
+
+// Orçamentos do mês atual, com pelo menos um em cada situação. Os limites saem do gasto real do
+// mês até hoje, para as situações valerem em qualquer dia em que o seed rode. Orçamentos que já
+// existem não são alterados.
+const hoje = todayInSaoPaulo();
+const mesAtual = { mes: hoje.getUTCMonth() + 1, ano: hoje.getUTCFullYear() };
+const gastos = await totalsByCategory(userId, { inicio: startOfMonth(hoje), fim: endOfMonth(hoje) });
+
+const limites: [categoria: string, limite: (gasto: number) => number][] = [
+  // Estourado: limite 10% abaixo do que já foi gasto
+  ["Transporte", (gasto) => (gasto > 0 ? Math.max(1000, Math.floor((gasto * 0.9) / 1000) * 1000) : 60000)],
+  // Atenção: o gasto fica em cerca de 88% do limite
+  ["Mercado", (gasto) => (gasto > 0 ? Math.round(gasto / 0.88) : 120000)],
+  // Dentro do limite, com folga
+  ["Alimentação", (gasto) => Math.max(80000, Math.ceil((gasto * 2.5) / 1000) * 1000)],
+  ["Lazer", (gasto) => Math.max(60000, Math.ceil((gasto * 2) / 1000) * 1000)],
+  ["Moradia", () => 250000],
+];
+
+const { count: novosOrcamentos } = await prisma.budget.createMany({
+  skipDuplicates: true,
+  data: limites.flatMap(([nome, limite]) => {
+    const categoria = categories.find((category) => category.nome === nome && category.tipo === "DESPESA");
+    if (!categoria) return [];
+    const gasto = gastos.find((group) => group.categoryId === categoria.id)?._sum.valor ?? 0;
+    return [{ userId, categoryId: categoria.id, valorLimite: limite(gasto), ...mesAtual }];
+  }),
+});
+
+// Gera os alertas dos orçamentos (cada um é criado uma única vez, mesmo rodando o seed de novo)
+const novosAlertas = await checkAlerts(userId);
+console.log(`✅ ${novosOrcamentos} orçamentos e ${novosAlertas} alertas novos criados`);
 
 await prisma.$disconnect();

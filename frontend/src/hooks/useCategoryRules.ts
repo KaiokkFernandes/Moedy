@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import * as categoryRulesService from '@/services/categoryRules'
 import type { CategoryRuleInput } from '@/types/import'
+import { useInvalidateFinance } from './useInvalidateFinance'
 
 export function useCategoryRules() {
   return useQuery({ queryKey: ['category-rules'], queryFn: categoryRulesService.list })
@@ -24,14 +25,7 @@ export function useDeleteCategoryRule() {
 }
 
 export function useApplyCategoryRules() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: categoryRulesService.apply,
-    // Aplicar as regras muda a categoria das transações
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['transactions'] }),
-        queryClient.invalidateQueries({ queryKey: ['reports'] }),
-      ]),
-  })
+  // Aplicar as regras muda a categoria das transações (e, com isso, relatórios e orçamentos)
+  const invalidate = useInvalidateFinance()
+  return useMutation({ mutationFn: categoryRulesService.apply, onSuccess: invalidate })
 }

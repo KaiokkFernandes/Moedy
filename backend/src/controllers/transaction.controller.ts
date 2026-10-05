@@ -5,6 +5,7 @@ import {
   transactionCategorySchema,
   transactionSchema,
 } from "../schemas/transaction.schema.js";
+import { checkAlertsSafely } from "../services/alert.service.js";
 import * as transactionService from "../services/transaction.service.js";
 
 export const list: RequestHandler = async (req, res) => {
@@ -14,19 +15,25 @@ export const list: RequestHandler = async (req, res) => {
 
 export const create: RequestHandler = async (req, res) => {
   const input = transactionSchema.parse(req.body);
-  res.status(201).json(await transactionService.create(req.userId, input));
+  const transaction = await transactionService.create(req.userId, input);
+  await checkAlertsSafely(req.userId, [transaction.id]);
+  res.status(201).json(transaction);
 };
 
 export const update: RequestHandler = async (req, res) => {
   const { id } = idParamSchema.parse(req.params);
   const input = transactionSchema.parse(req.body);
-  res.json(await transactionService.update(req.userId, id, input));
+  const transaction = await transactionService.update(req.userId, id, input);
+  await checkAlertsSafely(req.userId, [transaction.id]);
+  res.json(transaction);
 };
 
 export const updateCategory: RequestHandler = async (req, res) => {
   const { id } = idParamSchema.parse(req.params);
   const { categoryId } = transactionCategorySchema.parse(req.body);
-  res.json(await transactionService.updateCategory(req.userId, id, categoryId));
+  const transaction = await transactionService.updateCategory(req.userId, id, categoryId);
+  await checkAlertsSafely(req.userId, [transaction.id]);
+  res.json(transaction);
 };
 
 export const remove: RequestHandler = async (req, res) => {

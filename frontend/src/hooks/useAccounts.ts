@@ -1,24 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import * as accountsService from '@/services/accounts'
 import type { AccountInput } from '@/types/finance'
+import { useInvalidateFinance } from './useInvalidateFinance'
 
 export function useAccounts() {
   return useQuery({ queryKey: ['accounts'], queryFn: accountsService.list })
 }
 
-// O nome da conta aparece nas transações, e excluir a conta apaga as transações dela
-function useInvalidateAccounts() {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['accounts'] }),
-      queryClient.invalidateQueries({ queryKey: ['transactions'] }),
-      queryClient.invalidateQueries({ queryKey: ['reports'] }),
-    ])
-}
-
 export function useSaveAccount() {
-  const invalidate = useInvalidateAccounts()
+  // O nome da conta aparece nas transações
+  const invalidate = useInvalidateFinance()
   return useMutation({
     mutationFn: ({ id, data }: { id?: string; data: AccountInput }) =>
       id ? accountsService.update(id, data) : accountsService.create(data),
@@ -27,7 +18,8 @@ export function useSaveAccount() {
 }
 
 export function useDeleteAccount() {
-  const invalidate = useInvalidateAccounts()
+  // Excluir a conta apaga as transações dela
+  const invalidate = useInvalidateFinance()
   return useMutation({
     mutationFn: ({ id, confirm }: { id: string; confirm: boolean }) => accountsService.remove(id, confirm),
     onSuccess: invalidate,

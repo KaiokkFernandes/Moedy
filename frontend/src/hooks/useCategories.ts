@@ -1,22 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import * as categoriesService from '@/services/categories'
 import type { CategoryInput } from '@/types/finance'
+import { useInvalidateFinance } from './useInvalidateFinance'
 
 export function useCategories() {
   return useQuery({ queryKey: ['categories'], queryFn: categoriesService.list })
 }
 
-// Nome, cor e ícone da categoria aparecem nas transações e nas regras (excluir a categoria apaga as regras dela)
-function useInvalidateCategories() {
-  const queryClient = useQueryClient()
-  return () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['categories'] }),
-      queryClient.invalidateQueries({ queryKey: ['transactions'] }),
-      queryClient.invalidateQueries({ queryKey: ['category-rules'] }),
-      queryClient.invalidateQueries({ queryKey: ['reports'] }),
-    ])
-}
+// Nome, cor e ícone da categoria aparecem nas transações, nos relatórios, nos orçamentos e nas
+// regras (excluir a categoria apaga as regras e os orçamentos dela)
+const useInvalidateCategories = () => useInvalidateFinance('categories', 'category-rules')
 
 export function useSaveCategory() {
   const invalidate = useInvalidateCategories()
