@@ -59,3 +59,14 @@ export const aiLimiter = limiter({
   porUsuario: true,
   mensagem: "Muitas análises em pouco tempo. Aguarde alguns minutos e tente de novo.",
 });
+
+/**
+ * Limite geral da API: 600 requisições por minuto por IP. É folgado de propósito: aplicar em
+ * sequência as sugestões de categoria de uma tela grava uma transação por requisição (até 500),
+ * e isso precisa caber. Serve para conter abuso e laços acidentais, não o uso normal.
+ */
+export const generalLimiter = limiter({
+  windowMs: MINUTO,
+  limit: 600,
+  mensagem: "Muitas requisições em pouco tempo. Aguarde um instante e tente de novo.",
+});
