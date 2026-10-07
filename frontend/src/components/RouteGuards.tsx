@@ -1,13 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { FullScreenLoading } from '@/components/FullScreenLoading'
 import { useAuth } from '@/hooks/useAuth'
-
-function FullScreenLoading() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-page text-sm text-fg-3">
-      Carregando…
-    </div>
-  )
-}
 
 /** Área logada: sem sessão, manda para /login guardando a página pedida. */
 export function ProtectedRoute() {
