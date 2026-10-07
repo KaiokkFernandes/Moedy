@@ -1,0 +1,28 @@
+# O contexto de build é a raiz do repositório (monorepo).
+.git
+.github
+.vscode
+.DS_Store
+
+# Dependências e artefatos: são recriados dentro da imagem
+node_modules
+**/node_modules
+**/dist
+backend/src/generated
+.yarn/cache
+.yarn/install-state.gz
+.yarn/unplugged
+**/*.tsbuildinfo
+
+# Segredos nunca entram na imagem: as variáveis vêm do ambiente
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Não fazem parte da aplicação
+*.md
+backend/samples
+docker-compose*.yml
+render.yaml
