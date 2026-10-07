@@ -1,4 +1,6 @@
+import compression from "compression";
 import express from "express";
+import helmet from "helmet";
 import { env } from "./config/env.js";
 import { blockUnknownOrigins, corsMiddleware } from "./middlewares/cors.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
@@ -11,6 +13,14 @@ const app = express();
 app.set("trust proxy", 1);
 const PORT = env.PORT;
 
+// Cabeçalhos de segurança. A API só devolve JSON e CSV, então a política de conteúdo é a mais
+// restrita: nada pode ser carregado nem embutido a partir destas respostas.
+app.use(
+  helmet({
+    contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
+  }),
+);
+app.use(compression());
 app.use(blockUnknownOrigins);
 app.use(corsMiddleware);
 // O limite maior acomoda a confirmação de uma importação com milhares de transações
