@@ -21,7 +21,10 @@
     "typecheck": "yarn workspace backend typecheck && yarn workspace frontend typecheck",
     "test": "yarn workspace backend test && yarn workspace frontend test",
     "start": "yarn workspace backend start",
-    "migrate:deploy": "yarn workspace backend migrate:deploy"
+    "migrate:deploy": "yarn workspace backend migrate:deploy",
+    "docker:dev": "docker compose up --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build",
+    "docker:down": "docker compose down && docker compose -f docker-compose.prod.yml down"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"

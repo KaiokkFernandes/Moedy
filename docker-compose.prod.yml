@@ -1,0 +1,56 @@
+# Sobe as imagens de PRODUÇÃO na sua máquina, para testar antes de publicar.
+#   yarn docker:prod   → frontend em http://localhost:8080, API em http://localhost:3333
+# Usa um banco próprio (volume separado do ambiente de desenvolvimento).
+name: moedy-prod
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-moedy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-moedy}
+      POSTGRES_DB: ${POSTGRES_DB:-moedy}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+      DATABASE_URL: postgresql://${POSTGRES_USER:-moedy}:${POSTGRES_PASSWORD:-moedy}@db:5432/${POSTGRES_DB:-moedy}?schema=public
+      # Em produção o backend recusa o segredo de exemplo: gere um com `openssl rand -base64 48`.
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no arquivo .env (copie o .env.example)}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT_PROD:-8080}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+    ports:
+      - "${BACKEND_PORT:-3333}:3333"
+    depends_on:
+      db:
+        condition: service_healthy
+    # O healthcheck (/api/health) já vem definido no Dockerfile.
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        # Endereço da API visto pelo NAVEGADOR; fica fixo no bundle.
+        VITE_API_URL: http://localhost:${BACKEND_PORT:-3333}
+    ports:
+      - "${FRONTEND_PORT_PROD:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db-data:
