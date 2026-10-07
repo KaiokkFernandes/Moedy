@@ -5,6 +5,10 @@ import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { routes } from "./routes/index.js";
 
 const app = express();
+
+// A hospedagem (Render) coloca um proxy na frente: confiar em um salto faz req.ip ser o IP do
+// cliente, que é a chave dos limites de requisição
+app.set("trust proxy", 1);
 const PORT = env.PORT;
 
 app.use(blockUnknownOrigins);
