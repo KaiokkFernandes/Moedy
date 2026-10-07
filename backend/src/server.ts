@@ -1,11 +1,11 @@
-import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { routes } from "./routes/index.js";
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3333;
+const PORT = env.PORT;
 
 app.use(cors());
 // O limite maior acomoda a confirmação de uma importação com milhares de transações
