@@ -17,7 +17,7 @@ const PORT = env.PORT;
 // restrita: nada pode ser carregado nem embutido a partir destas respostas.
 app.use(
   helmet({
-    contentSecurityPolicy: { directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
+    contentSecurityPolicy: { useDefaults: false, directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
   }),
 );
 app.use(compression());
