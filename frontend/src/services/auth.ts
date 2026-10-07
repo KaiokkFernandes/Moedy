@@ -12,3 +12,8 @@ export async function register(data: RegisterData) {
 export async function me() {
   return (await api.get<{ user: User }>('/auth/me')).data.user
 }
+
+/** Configuração pública da autenticação (se o cadastro de novos usuários está aberto). */
+export async function config() {
+  return (await api.get<{ registrationEnabled: boolean }>('/auth/config')).data
+}

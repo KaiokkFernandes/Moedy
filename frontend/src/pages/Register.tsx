@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
 import { FormAlert } from '@/components/FormAlert'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
+import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled'
 import { getErrorMessage, getFieldErrors } from '@/lib/api'
 import { onlyErrors, validateEmail } from '@/lib/validation'
 
@@ -19,6 +20,7 @@ interface FieldErrors {
 
 export function Register() {
   const { register } = useAuth()
+  const registrationEnabled = useRegistrationEnabled()
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -54,6 +56,9 @@ export function Register() {
       setLoading(false)
     }
   }
+
+  // Com o cadastro desligado no servidor, esta página não tem o que oferecer
+  if (!registrationEnabled) return <Navigate to="/login" replace />
 
   return (
     <AuthLayout

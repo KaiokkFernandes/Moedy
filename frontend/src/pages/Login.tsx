@@ -5,11 +5,13 @@ import { FormAlert } from '@/components/FormAlert'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
+import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled'
 import { getErrorMessage } from '@/lib/api'
 import { onlyErrors, validateEmail } from '@/lib/validation'
 
 export function Login() {
   const { login } = useAuth()
+  const registrationEnabled = useRegistrationEnabled()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [errors, setErrors] = useState<{ email?: string; senha?: string }>({})
@@ -42,12 +44,14 @@ export function Login() {
       title="Entrar"
       subtitle="Acesse suas finanças pessoais"
       footer={
-        <>
-          Ainda não tem conta?{' '}
-          <Link to="/cadastro" className="font-medium text-accent-fg hover:underline">
-            Criar conta
-          </Link>
-        </>
+        registrationEnabled ? (
+          <>
+            Ainda não tem conta?{' '}
+            <Link to="/cadastro" className="font-medium text-accent-fg hover:underline">
+              Criar conta
+            </Link>
+          </>
+        ) : null
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">

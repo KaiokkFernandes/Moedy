@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import { rateLimit } from "express-rate-limit";
 import { env } from "../config/env.js";
 
@@ -12,11 +13,19 @@ import { env } from "../config/env.js";
 const FATOR = env.NODE_ENV === "production" ? 1 : 100;
 const MINUTO = 60 * 1000;
 
-function limiter(options: { windowMs: number; limit: number; mensagem: string; skipSuccessfulRequests?: boolean }) {
+function limiter(options: {
+  windowMs: number;
+  limit: number;
+  mensagem: string;
+  skipSuccessfulRequests?: boolean;
+  /** Conta por usuário logado em vez de por IP (use depois do `authenticate`). */
+  porUsuario?: boolean;
+}) {
   return rateLimit({
     windowMs: options.windowMs,
     limit: options.limit * FATOR,
     skipSuccessfulRequests: options.skipSuccessfulRequests,
+    ...(options.porUsuario ? { keyGenerator: (req: Request) => `usuario:${req.userId}` } : {}),
     standardHeaders: "draft-8",
     legacyHeaders: false,
     handler: (_req, res) => {
@@ -38,4 +47,15 @@ export const registerLimiter = limiter({
   windowMs: 60 * MINUTO,
   limit: 5,
   mensagem: "Muitas tentativas de cadastro. Tente de novo mais tarde.",
+});
+
+/**
+ * Rotas que podem chamar a IA paga (leitura de extrato e sugestão de categorias): 30 a cada
+ * 10 minutos por usuário. Protege a chave da API de uso abusivo por uma conta.
+ */
+export const aiLimiter = limiter({
+  windowMs: 10 * MINUTO,
+  limit: 30,
+  porUsuario: true,
+  mensagem: "Muitas análises em pouco tempo. Aguarde alguns minutos e tente de novo.",
 });
