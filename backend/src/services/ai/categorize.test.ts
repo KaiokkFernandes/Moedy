@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { afterEach, beforeEach, describe, it, mock } from "node:test";
+import { describe, it } from "node:test";
 import { categorizeWithAi, validateAiSuggestions } from "./categorize.js";
 import { AiError, type AiCategoryOption, type AiRawSuggestion, type AiTransactionInput, type Categorizer } from "./types.js";
 import { groupByDescription, type CategorizeInput } from "./batching.js";
@@ -100,19 +100,6 @@ describe("lotes e concorrência", () => {
 });
 
 describe("falhas", () => {
-  let warnings: unknown[][];
-  let restore: () => void;
-
-  beforeEach(() => {
-    warnings = [];
-    const spy = mock.method(console, "warn", (...args: unknown[]) => {
-      warnings.push(args);
-    });
-    restore = () => spy.mock.restore();
-  });
-
-  afterEach(() => restore());
-
   it("um lote com erro não derruba os outros: o status fica PARCIAL", async () => {
     const items = Array.from({ length: 60 }, (_, index) => item(index, nomeUnico(index)));
     let call = 0;
@@ -139,16 +126,19 @@ describe("falhas", () => {
     assert.equal(outcome.sugestoes.size, 0);
   });
 
-  it("o log do erro traz só o código e o status, nunca a descrição nem a chave", async () => {
+  it("o aviso de falha para o log traz só o código e o status, nunca a descrição nem a chave", async () => {
     process.env.ANTHROPIC_API_KEY = "sk-ant-segredo-de-teste";
     try {
+      const avisos: unknown[] = [];
       const { categorizer } = fakeCategorizer(() => {
         throw new AiError("API", "falhou", 401);
       });
-      await categorizeWithAi(categorizer, [item(0, "PIX ENVIADO - MARIA SILVA")], CATEGORIES, { maxTransacoes: 500 });
-      const logged = JSON.stringify(warnings);
-      assert.match(logged, /API \(HTTP 401\)/);
-      assert.doesNotMatch(logged, /MARIA SILVA|PIX|sk-ant/);
+      await categorizeWithAi(categorizer, [item(0, "PIX ENVIADO - MARIA SILVA")], CATEGORIES, {
+        maxTransacoes: 500,
+        aoFalhar: (erro) => avisos.push(erro),
+      });
+      assert.deepEqual(avisos, [{ codigo: "API", status: 401 }]);
+      assert.doesNotMatch(JSON.stringify(avisos), /MARIA SILVA|PIX|sk-ant/);
     } finally {
       delete process.env.ANTHROPIC_API_KEY;
     }

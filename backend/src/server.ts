@@ -2,6 +2,7 @@ import compression from "compression";
 import express from "express";
 import helmet from "helmet";
 import { env } from "./config/env.js";
+import { httpLogger, logger } from "./lib/logger.js";
 import { blockUnknownOrigins, corsMiddleware } from "./middlewares/cors.js";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
 import { routes } from "./routes/index.js";
@@ -15,6 +16,7 @@ const PORT = env.PORT;
 
 // Cabeçalhos de segurança. A API só devolve JSON e CSV, então a política de conteúdo é a mais
 // restrita: nada pode ser carregado nem embutido a partir destas respostas.
+app.use(httpLogger);
 app.use(
   helmet({
     contentSecurityPolicy: { useDefaults: false, directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] } },
@@ -32,5 +34,5 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`🚀 Backend rodando em http://localhost:${PORT}`);
+  logger.info({ porta: PORT, ambiente: env.NODE_ENV }, "Backend no ar");
 });

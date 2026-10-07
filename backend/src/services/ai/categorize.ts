@@ -24,6 +24,11 @@ const MOTIVOS: Record<string, string> = {
 
 interface Options {
   maxTransacoes: number;
+  /**
+   * Chamado a cada lote que falha, para o log. Recebe só o código do erro e o status HTTP:
+   * nada de descrições, valores ou chave.
+   */
+  aoFalhar?: (erro: { codigo: string; status?: number }) => void;
   batchSize?: number;
   concurrency?: number;
 }
@@ -37,7 +42,7 @@ export async function categorizeWithAi(
   categorizer: Categorizer,
   items: CategorizeInput[],
   categories: AiCategoryOption[],
-  { maxTransacoes, batchSize = AI_BATCH_SIZE, concurrency = AI_CONCURRENCY }: Options,
+  { maxTransacoes, aoFalhar, batchSize = AI_BATCH_SIZE, concurrency = AI_CONCURRENCY }: Options,
 ): Promise<AiOutcome> {
   const enviados = items.slice(0, maxTransacoes);
   const naoEnviadas = items.length - enviados.length;
@@ -61,8 +66,7 @@ export async function categorizeWithAi(
     } catch (error) {
       const erro = describeAiError(error);
       falhas.push(erro);
-      // Só o código e o status HTTP: nada de descrições, valores ou chave
-      console.warn(`[categorizacao-ia] lote falhou: ${erro.codigo}${erro.status ? ` (HTTP ${erro.status})` : ""}`);
+      aoFalhar?.(erro);
     }
   });
 

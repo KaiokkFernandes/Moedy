@@ -1,3 +1,4 @@
+import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/prisma.js";
 import {
   aiConfig,
@@ -98,6 +99,7 @@ export async function suggestCategories(
 
   const outcome = await categorizeWithAi(ai, pendentes, categories, {
     maxTransacoes: maxTransacoes ?? aiConfig().maxTransacoes,
+    aoFalhar: (erro) => logger.warn(erro, "Categorização por IA: um lote falhou"),
   });
 
   const tipoByIndice = new Map(pendentes.map((item) => [item.indice, item.tipo]));

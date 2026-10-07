@@ -2,6 +2,7 @@ import type { NotificationType, Prisma } from "../generated/prisma/client.js";
 import { addMonths, endOfMonth, monthKey, startOfMonth, todayInSaoPaulo, toISODate } from "../lib/dates.js";
 import { formatBRL, formatPercent, monthName } from "../lib/format.js";
 import { merchantKey, merchantName } from "../lib/merchant.js";
+import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/prisma.js";
 import * as budgetService from "./budget.service.js";
 import { recurring, reportWhere } from "./report.service.js";
@@ -234,7 +235,7 @@ export async function checkAlertsSafely(userId: string, transactionIds: string[]
   try {
     return await checkAlerts(userId, transactionIds);
   } catch (error) {
-    console.error("Falha ao gerar alertas:", error);
+    logger.error({ err: error, userId }, "Falha ao gerar alertas");
     return 0;
   }
 }
