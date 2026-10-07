@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
+import { ConectandoAviso } from '@/components/ConectandoAviso'
 import { FormAlert } from '@/components/FormAlert'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
+import { useDemora } from '@/hooks/useDemora'
 import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled'
 import { getErrorMessage, getFieldErrors } from '@/lib/api'
 import { onlyErrors, validateEmail } from '@/lib/validation'
@@ -28,6 +30,7 @@ export function Register() {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState('')
   const [loading, setLoading] = useState(false)
+  const demorando = useDemora(loading)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -109,6 +112,7 @@ export function Register() {
           error={errors.confirmacao}
         />
         <Button type="submit" fullWidth loading={loading}>Criar conta</Button>
+        {demorando && <ConectandoAviso />}
       </form>
     </AuthLayout>
   )

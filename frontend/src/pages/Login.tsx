@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
+import { ConectandoAviso } from '@/components/ConectandoAviso'
 import { FormAlert } from '@/components/FormAlert'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
+import { useDemora } from '@/hooks/useDemora'
 import { useRegistrationEnabled } from '@/hooks/useRegistrationEnabled'
 import { getErrorMessage } from '@/lib/api'
 import { onlyErrors, validateEmail } from '@/lib/validation'
@@ -17,6 +19,7 @@ export function Login() {
   const [errors, setErrors] = useState<{ email?: string; senha?: string }>({})
   const [formError, setFormError] = useState('')
   const [loading, setLoading] = useState(false)
+  const demorando = useDemora(loading)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -74,6 +77,7 @@ export function Login() {
           error={errors.senha}
         />
         <Button type="submit" fullWidth loading={loading}>Entrar</Button>
+        {demorando && <ConectandoAviso />}
       </form>
     </AuthLayout>
   )
