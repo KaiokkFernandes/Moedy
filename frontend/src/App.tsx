@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/AppLayout'
 import { FullScreenLoading } from '@/components/FullScreenLoading'
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/RouteGuards'
@@ -17,6 +17,7 @@ const Contas = lazy(() => import('@/pages/Contas').then((m) => ({ default: m.Con
 const Categorias = lazy(() => import('@/pages/Categorias').then((m) => ({ default: m.Categorias })))
 const Regras = lazy(() => import('@/pages/Regras').then((m) => ({ default: m.Regras })))
 const Configuracoes = lazy(() => import('@/pages/Configuracoes').then((m) => ({ default: m.Configuracoes })))
+const NaoEncontrada = lazy(() => import('@/pages/NaoEncontrada').then((m) => ({ default: m.NaoEncontrada })))
 const Importar = lazy(() => import('@/pages/Importar').then((m) => ({ default: m.Importar })))
 
 export default function App() {
@@ -44,7 +45,7 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NaoEncontrada />} />
       </Routes>
     </Suspense>
   )
