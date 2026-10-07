@@ -15,13 +15,13 @@ interface StatCardProps {
 /** Cartão com um número de destaque do painel. */
 export function StatCard({ label, value, valueClassName, children }: StatCardProps) {
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-      <p className="text-sm text-slate-500">{label}</p>
+    <div className="rounded-2xl bg-surface p-4 ring-1 ring-line">
+      <p className="text-sm text-fg-3">{label}</p>
       {value === undefined ? (
-        <div role="status" aria-label="Carregando" className="mt-2 h-7 w-28 animate-pulse rounded bg-slate-100" />
+        <div role="status" aria-label="Carregando" className="mt-2 h-7 w-28 animate-pulse rounded bg-subtle" />
       ) : (
         <>
-          <p className={clsx('mt-1 text-xl font-semibold sm:text-2xl', valueClassName ?? 'text-slate-900')}>
+          <p className={clsx('mt-1 text-xl font-semibold sm:text-2xl', valueClassName ?? 'text-fg')}>
             {formatCurrency(value)}
           </p>
           {children}

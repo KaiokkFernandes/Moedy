@@ -34,8 +34,8 @@ type Notice =
 
 function SummaryCard({ label, value, className }: { label: string; value: number; className: string }) {
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-      <p className="text-sm text-slate-500">{label}</p>
+    <div className="rounded-2xl bg-surface p-4 ring-1 ring-line">
+      <p className="text-sm text-fg-3">{label}</p>
       <p className={clsx('mt-1 text-xl font-semibold tabular-nums', className)}>{formatCurrency(value)}</p>
     </div>
   )
@@ -134,7 +134,7 @@ export function Transacoes() {
           action={
             <Link
               to="/contas"
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-solid hover:bg-accent-hover"
             >
               Ir para Contas
             </Link>
@@ -187,12 +187,12 @@ export function Transacoes() {
           className={clsx('transition-opacity', transactions.isPlaceholderData && 'opacity-60')}
         >
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
-            <SummaryCard label="Receitas" value={data.totalReceitas} className="text-emerald-600" />
-            <SummaryCard label="Despesas" value={data.totalDespesas} className="text-red-600" />
+            <SummaryCard label="Receitas" value={data.totalReceitas} className="text-success" />
+            <SummaryCard label="Despesas" value={data.totalDespesas} className="text-danger-fg" />
             <SummaryCard
               label="Saldo do período"
               value={data.totalReceitas - data.totalDespesas}
-              className={data.totalReceitas - data.totalDespesas < 0 ? 'text-red-600' : 'text-slate-900'}
+              className={data.totalReceitas - data.totalDespesas < 0 ? 'text-danger-fg' : 'text-fg'}
             />
           </div>
 
@@ -277,7 +277,7 @@ export function Transacoes() {
       >
         {deleting && (
           <p>
-            Excluir <strong className="text-slate-900">{deleting.descricao}</strong>, de {formatDate(deleting.data)}, no
+            Excluir <strong className="text-fg">{deleting.descricao}</strong>, de {formatDate(deleting.data)}, no
             valor de {formatCurrency(deleting.valor)}?
           </p>
         )}

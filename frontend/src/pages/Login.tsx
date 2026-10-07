@@ -44,7 +44,7 @@ export function Login() {
       footer={
         <>
           Ainda não tem conta?{' '}
-          <Link to="/cadastro" className="font-medium text-emerald-700 hover:underline">
+          <Link to="/cadastro" className="font-medium text-accent-fg hover:underline">
             Criar conta
           </Link>
         </>

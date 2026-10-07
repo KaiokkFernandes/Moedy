@@ -2,9 +2,9 @@ import clsx from 'clsx'
 import type { Confianca, OrigemCategoria } from '@/types/import'
 
 const ORIGENS: Record<Exclude<OrigemCategoria, 'MANUAL'>, { label: string; className: string }> = {
-  REGRA: { label: 'Regra', className: 'bg-sky-50 text-sky-800' },
-  MEMORIA: { label: 'Memória', className: 'bg-violet-50 text-violet-800' },
-  IA: { label: 'IA', className: 'bg-indigo-50 text-indigo-800' },
+  REGRA: { label: 'Regra', className: 'bg-info-soft text-info-fg' },
+  MEMORIA: { label: 'Memória', className: 'bg-memory-soft text-memory-fg' },
+  IA: { label: 'IA', className: 'bg-ai-soft text-ai-fg' },
 }
 
 interface OrigemBadgeProps {
@@ -27,7 +27,7 @@ export function OrigemBadge({ origem, confianca = null }: OrigemBadgeProps) {
         {origem === 'IA' && confianca ? `${label} · ${confianca === 'ALTA' ? 'confiança alta' : 'confiança média'}` : label}
       </span>
       {conferir && (
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-amber-900">
+        <span className="rounded-full bg-warning-soft-strong px-2 py-0.5 text-xs font-medium whitespace-nowrap text-warning-strong">
           Conferir
         </span>
       )}

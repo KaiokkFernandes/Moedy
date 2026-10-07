@@ -1,1 +1,183 @@
 @import "tailwindcss";
+
+/* Modo escuro por classe: o script do index.html e o ThemeProvider põem .dark no <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Tokens semânticos. Os componentes usam só estes nomes (bg-surface, text-fg, border-line...),
+ * nunca cores fixas da paleta. Os valores mudam em .dark.
+ */
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  --color-fg-4: var(--fg-4);
+  --color-on-solid: var(--on-solid);
+  --color-inverse: var(--inverse);
+  --color-inverse-fg: var(--inverse-fg);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-strong: var(--accent-soft-strong);
+  --color-accent-ring: var(--accent-ring);
+  --color-focus: var(--focus);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-strong: var(--danger-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-soft-strong: var(--danger-soft-strong);
+  --color-danger-ring: var(--danger-ring);
+  --color-warning: var(--warning);
+  --color-warning-bar: var(--warning-bar);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-strong: var(--warning-strong);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-soft-strong: var(--warning-soft-strong);
+  --color-warning-line: var(--warning-line);
+  --color-info-fg: var(--info-fg);
+  --color-info-soft: var(--info-soft);
+  --color-memory-fg: var(--memory-fg);
+  --color-memory-soft: var(--memory-soft);
+  --color-ai-fg: var(--ai-fg);
+  --color-ai-soft: var(--ai-soft);
+}
+
+:root {
+  color-scheme: light;
+  --page: #f8fafc;
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --subtle: #f1f5f9;
+  --line: #e2e8f0;
+  --line-strong: #94a3b8;
+  --fg: #0f172a;
+  --fg-2: #475569;
+  --fg-3: #5b6678;
+  --fg-4: #8290a3;
+  --on-solid: #ffffff;
+  --inverse: #0f172a;
+  --inverse-fg: #ffffff;
+  --accent: #047857;
+  --accent-hover: #065f46;
+  --accent-fg: #047857;
+  --accent-soft: #ecfdf5;
+  --accent-soft-strong: #d1fae5;
+  --accent-ring: #d1fae5;
+  --focus: #64748b;
+  --success: #047857;
+  --success-strong: #065f46;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-fg: #dc2626;
+  --danger-strong: #b91c1c;
+  --danger-soft: #fef2f2;
+  --danger-soft-strong: #fee2e2;
+  --danger-ring: #fee2e2;
+  --warning: #b45309;
+  --warning-bar: #f59e0b;
+  --warning-fg: #b45309;
+  --warning-strong: #92400e;
+  --warning-soft: #fffbeb;
+  --warning-soft-strong: #fef3c7;
+  --warning-line: #fde68a;
+  --info-fg: #075985;
+  --info-soft: #e0f2fe;
+  --memory-fg: #5b21b6;
+  --memory-soft: #ede9fe;
+  --ai-fg: #3730a3;
+  --ai-soft: #e0e7ff;
+  --chart-receita: #059669;
+  --chart-despesa: #dc2626;
+  --chart-saldo: #334155;
+  --chart-contexto: #94a3b8;
+  --chart-outras: #cbd5e1;
+  --chart-grade: #e2e8f0;
+  --chart-eixo: #64748b;
+  --chart-cursor: #f1f5f9;
+}
+
+.dark {
+  color-scheme: dark;
+  --page: #0f1115;
+  --surface: #171a21;
+  --elevated: #1f232c;
+  --subtle: #242935;
+  --line: #2c3240;
+  --line-strong: #4a5263;
+  --fg: #e6e8ec;
+  --fg-2: #b8bfcb;
+  --fg-3: #9aa3b2;
+  --fg-4: #6b7385;
+  --on-solid: #ffffff;
+  --inverse: #e6e8ec;
+  --inverse-fg: #0f1115;
+  --accent: #047857;
+  --accent-hover: #059669;
+  --accent-fg: #34d399;
+  --accent-soft: #0f2a22;
+  --accent-soft-strong: #134e3a;
+  --accent-ring: #065f46;
+  --focus: #94a3b8;
+  --success: #6ee7b7;
+  --success-strong: #a7f3d0;
+  --danger: #b91c1c;
+  --danger-hover: #991b1b;
+  --danger-fg: #f87171;
+  --danger-strong: #fca5a5;
+  --danger-soft: #3b1619;
+  --danger-soft-strong: #4c1d21;
+  --danger-ring: #7f1d1d;
+  --warning: #b45309;
+  --warning-bar: #f59e0b;
+  --warning-fg: #fbbf24;
+  --warning-strong: #fde68a;
+  --warning-soft: #2d2110;
+  --warning-soft-strong: #3d2c10;
+  --warning-line: #6b4a12;
+  --info-fg: #7dd3fc;
+  --info-soft: #0c2a3d;
+  --memory-fg: #c4b5fd;
+  --memory-soft: #2a1f4a;
+  --ai-fg: #a5b4fc;
+  --ai-soft: #1e2250;
+  --chart-receita: #34d399;
+  --chart-despesa: #f87171;
+  --chart-saldo: #cbd5e1;
+  --chart-contexto: #64748b;
+  --chart-outras: #475569;
+  --chart-grade: #2c3240;
+  --chart-eixo: #9aa3b2;
+  --chart-cursor: #242935;
+}
+
+html {
+  background-color: var(--page);
+}
+
+body {
+  background-color: var(--page);
+  color: var(--fg);
+}
+
+/* Troca de tema suave; só quando o usuário muda o tema (a classe é removida logo depois). */
+.trocando-tema,
+.trocando-tema * {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, fill 200ms ease, stroke 200ms ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trocando-tema,
+  .trocando-tema * {
+    transition: none !important;
+  }
+}

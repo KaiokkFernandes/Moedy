@@ -29,9 +29,9 @@ const FILTROS: { id: Filtro; label: string }[] = [
 
 function SummaryCard({ label, value, className }: { label: string; value: number; className?: string }) {
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className={clsx('mt-1 text-2xl font-semibold tabular-nums', className ?? 'text-slate-900')}>{value}</p>
+    <div className="rounded-2xl bg-surface p-4 ring-1 ring-line">
+      <p className="text-sm text-fg-3">{label}</p>
+      <p className={clsx('mt-1 text-2xl font-semibold tabular-nums', className ?? 'text-fg')}>{value}</p>
     </div>
   )
 }
@@ -121,30 +121,30 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard label="Linhas no arquivo" value={resumo.total} />
-        <SummaryCard label="Novas" value={resumo.novas} className="text-emerald-600" />
-        <SummaryCard label="Duplicadas" value={resumo.duplicadas} className="text-slate-500" />
-        <SummaryCard label="Com erro" value={resumo.comErro} className={resumo.comErro > 0 ? 'text-red-600' : 'text-slate-500'} />
+        <SummaryCard label="Novas" value={resumo.novas} className="text-success" />
+        <SummaryCard label="Duplicadas" value={resumo.duplicadas} className="text-fg-3" />
+        <SummaryCard label="Com erro" value={resumo.comErro} className={resumo.comErro > 0 ? 'text-danger-fg' : 'text-fg-3'} />
       </div>
 
       {novas.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-white px-5 py-3 text-sm text-slate-700 ring-1 ring-slate-200">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-surface px-5 py-3 text-sm text-fg-2 ring-1 ring-line">
           <span>
-            Categorizadas por regra: <strong className="text-slate-900">{contagem.REGRA}</strong>
+            Categorizadas por regra: <strong className="text-fg">{contagem.REGRA}</strong>
           </span>
           <span>
-            por memória: <strong className="text-slate-900">{contagem.MEMORIA}</strong>
+            por memória: <strong className="text-fg">{contagem.MEMORIA}</strong>
           </span>
           <span>
-            por IA: <strong className="text-slate-900">{contagem.IA}</strong>
+            por IA: <strong className="text-fg">{contagem.IA}</strong>
           </span>
-          <span className={clsx(contagem.sem > 0 && 'font-medium text-amber-800')}>
+          <span className={clsx(contagem.sem > 0 && 'font-medium text-warning-strong')}>
             sem categoria: <strong>{contagem.sem}</strong>
           </span>
         </div>
       )}
 
       {erros.length > 0 && (
-        <details className="rounded-2xl bg-red-50 px-5 py-3 text-sm text-red-800">
+        <details className="rounded-2xl bg-danger-soft px-5 py-3 text-sm text-danger-strong">
           <summary className="cursor-pointer font-medium">
             {pluralize(erros.length, 'linha não pôde ser lida', 'linhas não puderam ser lidas')} e{' '}
             {erros.length === 1 ? 'será ignorada' : 'serão ignoradas'}
@@ -160,7 +160,7 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
       )}
 
       {resumo.novas === 0 && (
-        <p role="status" className="rounded-2xl bg-amber-50 px-5 py-3 text-sm text-amber-800">
+        <p role="status" className="rounded-2xl bg-warning-soft px-5 py-3 text-sm text-warning-strong">
           {itens.length === 0
             ? 'Nenhuma transação válida foi encontrada neste arquivo.'
             : 'Todas as transações deste arquivo já foram importadas nesta conta. Não há nada novo para importar.'}
@@ -168,8 +168,8 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
       )}
 
       {itens.length > 0 && (
-        <section aria-label="Transações encontradas" className="rounded-2xl bg-white ring-1 ring-slate-200">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
+        <section aria-label="Transações encontradas" className="rounded-2xl bg-surface ring-1 ring-line">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
             <div className="flex items-center gap-3">
               <input
                 ref={selectAllRef}
@@ -178,9 +178,9 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                 checked={allSelected}
                 disabled={novas.length === 0}
                 onChange={() => setSelected(allSelected ? new Set() : new Set(novas.map((item) => item.externalId)))}
-                className="size-4 rounded border-slate-300 accent-emerald-600"
+                className="size-4 rounded border-line-strong accent-accent"
               />
-              <p className="text-sm font-medium text-slate-900">
+              <p className="text-sm font-medium text-fg">
                 {selected.size} de {pluralize(novas.length, 'nova selecionada', 'novas selecionadas')}
               </p>
             </div>
@@ -192,8 +192,8 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                   aria-pressed={filtro === opcao.id}
                   onClick={() => setFiltro(opcao.id)}
                   className={clsx(
-                    'rounded-full px-3 py-1 text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
-                    filtro === opcao.id ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                    'rounded-full px-3 py-1 text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+                    filtro === opcao.id ? 'bg-inverse text-inverse-fg' : 'bg-subtle text-fg-2 hover:bg-line',
                   )}
                 >
                   {opcao.label}
@@ -203,9 +203,9 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
           </div>
 
           {visiveis.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-slate-500">Nenhuma transação neste filtro.</p>
+            <p className="px-4 py-8 text-center text-sm text-fg-3">Nenhuma transação neste filtro.</p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line">
               {visiveis.map((item) => {
                 const receita = item.tipo === 'RECEITA'
                 const origem = origemById[item.externalId] ?? null
@@ -214,7 +214,7 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                     key={item.externalId}
                     className={clsx(
                       'grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-2.5 md:grid-cols-[auto_6rem_1fr_12rem_auto_8rem]',
-                      item.duplicada && 'bg-slate-50 opacity-50',
+                      item.duplicada && 'bg-page opacity-50',
                     )}
                   >
                     <input
@@ -223,24 +223,24 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                       checked={selected.has(item.externalId)}
                       disabled={item.duplicada}
                       onChange={() => toggle(item.externalId)}
-                      className="col-start-1 row-start-1 size-4 rounded border-slate-300 accent-emerald-600"
+                      className="col-start-1 row-start-1 size-4 rounded border-line-strong accent-accent"
                     />
-                    <span className="hidden text-sm whitespace-nowrap text-slate-600 tabular-nums md:col-start-2 md:row-start-1 md:block">
+                    <span className="hidden text-sm whitespace-nowrap text-fg-2 tabular-nums md:col-start-2 md:row-start-1 md:block">
                       {formatDate(item.data)}
                     </span>
                     <div className="col-start-2 row-start-1 min-w-0 md:col-start-3">
-                      <p className="truncate text-sm font-medium text-slate-900" title={item.descricao}>
+                      <p className="truncate text-sm font-medium text-fg" title={item.descricao}>
                         {item.descricao}
                         {item.duplicada && (
-                          <span className="ml-2 rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                          <span className="ml-2 rounded-full bg-line px-2 py-0.5 text-xs font-medium text-fg-2">
                             Duplicada
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-fg-3">
                         <span className="md:hidden">{formatDate(item.data)}</span>
                         {ignored.has(item.externalId) && (
-                          <span className="font-medium text-slate-600">
+                          <span className="font-medium text-fg-2">
                             <span className="md:hidden"> · </span>Fora dos relatórios
                           </span>
                         )}
@@ -268,10 +268,10 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                       disabled={item.duplicada}
                       onClick={() => toggleIgnored(item.externalId)}
                       className={clsx(
-                        'col-start-3 row-start-2 justify-self-end rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed md:col-start-5 md:row-start-1',
+                        'col-start-3 row-start-2 justify-self-end rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed md:col-start-5 md:row-start-1',
                         ignored.has(item.externalId)
-                          ? 'bg-slate-800 text-white'
-                          : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700',
+                          ? 'bg-inverse text-inverse-fg'
+                          : 'text-fg-4 hover:bg-subtle hover:text-fg-2',
                       )}
                     >
                       <EyeOff className="size-4" aria-hidden />
@@ -279,7 +279,7 @@ export function ImportReview({ data, categories, loading, error, onBack, onConfi
                     <span
                       className={clsx(
                         'col-start-3 row-start-1 text-right text-sm font-medium whitespace-nowrap tabular-nums md:col-start-6',
-                        receita ? 'text-emerald-600' : 'text-red-600',
+                        receita ? 'text-success' : 'text-danger-fg',
                       )}
                     >
                       {receita ? '+' : '−'} {formatCurrency(item.valor)}

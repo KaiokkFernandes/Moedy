@@ -20,16 +20,16 @@ export function ChartTooltip({ active, payload, label, formatLabel }: ChartToolt
   if (!active || !payload?.length) return null
 
   return (
-    <div className="rounded-lg bg-white px-3 py-2 text-sm shadow-lg ring-1 ring-slate-200">
+    <div className="rounded-lg bg-elevated px-3 py-2 text-sm shadow-lg ring-1 ring-line">
       {label !== undefined && label !== '' && (
-        <p className="mb-1 text-xs text-slate-500">{formatLabel ? formatLabel(String(label)) : label}</p>
+        <p className="mb-1 text-xs text-fg-3">{formatLabel ? formatLabel(String(label)) : label}</p>
       )}
       <ul className="space-y-0.5">
         {payload.map((entry, index) => (
           <li key={index} className="flex items-center gap-2">
             <span aria-hidden className="h-0.5 w-3 shrink-0 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-slate-600">{entry.name}</span>
-            <strong className="ml-auto pl-3 font-semibold text-slate-900 tabular-nums">
+            <span className="text-fg-2">{entry.name}</span>
+            <strong className="ml-auto pl-3 font-semibold text-fg tabular-nums">
               {formatCurrency(Number(entry.value ?? 0))}
             </strong>
           </li>
@@ -42,7 +42,7 @@ export function ChartTooltip({ active, payload, label, formatLabel }: ChartToolt
 /** Legenda das séries: uma amostra da cor (barra ou linha, como a marca do gráfico) e o nome em tinta normal. */
 export function ChartLegend({ items }: { items: { label: string; color: string; shape: 'bar' | 'line' }[] }) {
   return (
-    <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+    <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg-2">
       {items.map((item) => (
         <li key={item.label} className="flex items-center gap-1.5">
           <span

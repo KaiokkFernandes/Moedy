@@ -32,12 +32,12 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       onClick={(event) => {
         if (event.target === ref.current) onClose()
       }}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-2xl bg-white p-0 shadow-xl backdrop:bg-slate-900/40"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-md overflow-y-auto rounded-2xl bg-elevated p-0 shadow-xl backdrop:bg-overlay"
     >
       {open && (
         <div className="p-6">
           <div className="mb-5 flex items-start justify-between gap-4">
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-fg">{title}</h2>
             <IconButton label="Fechar" onClick={onClose} className="-m-2">
               <X className="size-5" />
             </IconButton>

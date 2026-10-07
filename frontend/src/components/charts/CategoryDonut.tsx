@@ -1,5 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { CHART_COLORS } from '@/lib/chartTheme'
+import { useTheme } from '@/hooks/useTheme'
+import { corParaTema } from '@/lib/color'
+import { useChartColors } from '@/hooks/useChartColors'
 import { formatCurrency, formatPercent } from '@/lib/format'
 import type { CategoryTotal } from '@/types/reports'
 import { ChartTooltip } from './ChartTooltip'
@@ -17,7 +19,7 @@ interface Slice {
   categoria?: CategoryTotal
 }
 
-function buildSlices(categorias: CategoryTotal[], total: number): Slice[] {
+function buildSlices(categorias: CategoryTotal[], total: number, corOutras: string): Slice[] {
   const toSlice = (categoria: CategoryTotal): Slice => ({
     key: categoria.categoryId ?? 'sem',
     nome: categoria.nome,
@@ -36,7 +38,7 @@ function buildSlices(categorias: CategoryTotal[], total: number): Slice[] {
     {
       key: 'outras',
       nome: `Outras (${resto.length})`,
-      cor: CHART_COLORS.outras,
+      cor: corOutras,
       total: totalResto,
       percentual: total === 0 ? 0 : Math.round((totalResto / total) * 1000) / 10,
     },
@@ -55,7 +57,9 @@ interface CategoryDonutProps {
 
 /** Rosca de totais por categoria, com legenda (nome, percentual e valor) ao lado. */
 export function CategoryDonut({ categorias, total, centerLabel, onSelect }: CategoryDonutProps) {
-  const slices = buildSlices(categorias, total)
+  const cores = useChartColors()
+  const { escuro } = useTheme()
+  const slices = buildSlices(categorias, total, cores.outras)
 
   return (
     // Lado a lado só quando o cartão é largo o bastante para a legenda não cortar os nomes
@@ -83,7 +87,7 @@ export function CategoryDonut({ categorias, total, centerLabel, onSelect }: Cate
               {slices.map((slice) => (
                 <Cell
                   key={slice.key}
-                  fill={slice.cor}
+                  fill={corParaTema(slice.cor, escuro)}
                   className={onSelect && slice.categoria ? 'cursor-pointer outline-none hover:opacity-80' : 'outline-none'}
                 />
               ))}
@@ -92,8 +96,8 @@ export function CategoryDonut({ categorias, total, centerLabel, onSelect }: Cate
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-base font-semibold text-slate-900">{formatCurrency(total)}</span>
-          <span className="text-xs text-slate-500">{centerLabel}</span>
+          <span className="text-base font-semibold text-fg">{formatCurrency(total)}</span>
+          <span className="text-xs text-fg-3">{centerLabel}</span>
         </div>
       </div>
 
@@ -101,10 +105,10 @@ export function CategoryDonut({ categorias, total, centerLabel, onSelect }: Cate
         {slices.map((slice) => {
           const content = (
             <>
-              <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: slice.cor }} />
-              <span className="min-w-0 flex-1 truncate text-left text-slate-700">{slice.nome}</span>
-              <span className="text-slate-500 tabular-nums">{formatPercent(slice.percentual)}</span>
-              <span className="w-24 text-right font-medium text-slate-900 tabular-nums">{formatCurrency(slice.total)}</span>
+              <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: corParaTema(slice.cor, escuro) }} />
+              <span className="min-w-0 flex-1 truncate text-left text-fg-2">{slice.nome}</span>
+              <span className="text-fg-3 tabular-nums">{formatPercent(slice.percentual)}</span>
+              <span className="w-24 text-right font-medium text-fg tabular-nums">{formatCurrency(slice.total)}</span>
             </>
           )
           return (
@@ -114,7 +118,7 @@ export function CategoryDonut({ categorias, total, centerLabel, onSelect }: Cate
                   type="button"
                   onClick={() => onSelect(slice.categoria!)}
                   title={`Ver transações de ${slice.nome}`}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-slate-400"
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1 hover:bg-page focus-visible:outline-2 focus-visible:outline-focus"
                 >
                   {content}
                 </button>

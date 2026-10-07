@@ -14,7 +14,7 @@ export function Pagination({ page, pageSize, total, onChange }: PaginationProps)
   const last = Math.min(page * pageSize, total)
 
   return (
-    <nav aria-label="Paginação" className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+    <nav aria-label="Paginação" className="flex flex-wrap items-center justify-between gap-3 text-sm text-fg-2">
       <p>
         Mostrando {first}–{last} de {total}
       </p>

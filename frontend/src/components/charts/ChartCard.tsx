@@ -39,40 +39,40 @@ interface ChartCardProps {
  */
 export function ChartCard({ title, subtitle, action, query, empty, emptyMessage, table, className, children }: ChartCardProps) {
   return (
-    <section aria-label={title} className={clsx('flex min-w-0 flex-col rounded-2xl bg-white p-5 ring-1 ring-slate-200', className)}>
+    <section aria-label={title} className={clsx('flex min-w-0 flex-col rounded-2xl bg-surface p-5 ring-1 ring-line', className)}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-medium text-slate-900">{title}</h2>
-          {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+          <h2 className="font-medium text-fg">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-sm text-fg-3">{subtitle}</p>}
         </div>
         {action}
       </div>
 
       {query.isPending ? (
-        <div role="status" className="flex flex-1 items-center justify-center gap-2 py-12 text-sm text-slate-500">
+        <div role="status" className="flex flex-1 items-center justify-center gap-2 py-12 text-sm text-fg-3">
           <LoaderCircle className="size-5 animate-spin" aria-hidden />
           Carregando…
         </div>
       ) : query.isError ? (
         <div role="alert" className="flex flex-1 flex-col items-center justify-center py-8 text-center">
-          <CircleAlert className="size-6 text-red-600" aria-hidden />
-          <p className="mt-2 text-sm text-red-700">{getErrorMessage(query.error, 'Não foi possível carregar este bloco.')}</p>
+          <CircleAlert className="size-6 text-danger-fg" aria-hidden />
+          <p className="mt-2 text-sm text-danger-strong">{getErrorMessage(query.error, 'Não foi possível carregar este bloco.')}</p>
           <Button variant="secondary" size="sm" className="mt-3" onClick={() => query.refetch()}>
             Tentar novamente
           </Button>
         </div>
       ) : empty ? (
-        <p className="flex flex-1 items-center justify-center py-12 text-center text-sm text-slate-500">{emptyMessage}</p>
+        <p className="flex flex-1 items-center justify-center py-12 text-center text-sm text-fg-3">{emptyMessage}</p>
       ) : (
         <div aria-busy={query.isPlaceholderData} className={clsx('transition-opacity', query.isPlaceholderData && 'opacity-60')}>
           {children}
           {table && (
             <details className="mt-3 text-sm">
-              <summary className="cursor-pointer text-slate-500 hover:text-slate-700">Ver dados em tabela</summary>
+              <summary className="cursor-pointer text-fg-3 hover:text-fg-2">Ver dados em tabela</summary>
               <div className="mt-2 max-h-64 overflow-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 text-xs text-slate-500">
+                    <tr className="border-b border-line text-xs text-fg-3">
                       {table.columns.map((column, index) => (
                         <th key={column} scope="col" className={clsx('py-1.5 font-medium', index > 0 && 'text-right')}>
                           {column}
@@ -80,11 +80,11 @@ export function ChartCard({ title, subtitle, action, query, empty, emptyMessage,
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-line">
                     {table.rows.map((row, rowIndex) => (
                       <tr key={rowIndex}>
                         {row.map((cell, index) => (
-                          <td key={index} className={clsx('py-1.5 text-slate-700', index > 0 && 'text-right tabular-nums')}>
+                          <td key={index} className={clsx('py-1.5 text-fg-2', index > 0 && 'text-right tabular-nums')}>
                             {cell}
                           </td>
                         ))}

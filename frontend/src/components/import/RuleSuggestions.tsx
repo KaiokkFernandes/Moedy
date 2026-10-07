@@ -82,13 +82,13 @@ export function RuleSuggestions({ itens, categories }: { itens: ImportItem[]; ca
   }
 
   return (
-    <section aria-label="Criar regras para as sugestões aceitas" className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-      <h2 className="font-medium text-slate-900">Criar regras para as sugestões que você aceitou?</h2>
-      <p className="mt-1 text-sm text-slate-600">
+    <section aria-label="Criar regras para as sugestões aceitas" className="rounded-2xl bg-surface p-5 ring-1 ring-line">
+      <h2 className="font-medium text-fg">Criar regras para as sugestões que você aceitou?</h2>
+      <p className="mt-1 text-sm text-fg-2">
         Uma regra faz as próximas transações com essa palavra-chave já chegarem categorizadas, sem a IA. Marque as que quiser.
       </p>
 
-      <ul className="mt-4 divide-y divide-slate-100">
+      <ul className="mt-4 divide-y divide-line">
         {propostas.map((proposal) => (
           <li key={proposal.palavraChave}>
             <label className="flex cursor-pointer items-center gap-3 py-2.5">
@@ -96,13 +96,13 @@ export function RuleSuggestions({ itens, categories }: { itens: ImportItem[]; ca
                 type="checkbox"
                 checked={marcadas.has(proposal.palavraChave)}
                 onChange={() => toggle(proposal.palavraChave)}
-                className="size-4 rounded border-slate-300 accent-emerald-600"
+                className="size-4 rounded border-line-strong accent-accent"
               />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium text-slate-900">
+                <span className="block text-sm font-medium text-fg">
                   "{proposal.palavraChave}" → {proposal.categoriaNome}
                 </span>
-                <span className="block truncate text-xs text-slate-500">ex.: {proposal.exemplo}</span>
+                <span className="block truncate text-xs text-fg-3">ex.: {proposal.exemplo}</span>
               </span>
             </label>
           </li>
@@ -114,12 +114,12 @@ export function RuleSuggestions({ itens, categories }: { itens: ImportItem[]; ca
           Criar {pluralize(marcadas.size, 'regra', 'regras')} selecionada{marcadas.size === 1 ? '' : 's'}
         </Button>
         {resultado && (
-          <p role="status" className="text-sm text-emerald-800">
+          <p role="status" className="text-sm text-success-strong">
             {resultado}
           </p>
         )}
         {erro && (
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-sm text-danger-strong">
             {erro}
           </p>
         )}

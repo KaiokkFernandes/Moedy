@@ -51,15 +51,15 @@ function Steps({ current, csv }: { current: Step['name']; csv: boolean }) {
           <span
             className={clsx(
               'flex size-6 items-center justify-center rounded-full text-xs font-semibold',
-              index < currentIndex && 'bg-emerald-100 text-emerald-700',
-              index === currentIndex && 'bg-emerald-600 text-white',
-              index > currentIndex && 'bg-slate-200 text-slate-500',
+              index < currentIndex && 'bg-accent-soft-strong text-accent-fg',
+              index === currentIndex && 'bg-accent text-on-solid',
+              index > currentIndex && 'bg-line text-fg-3',
             )}
           >
             {index < currentIndex ? <Check className="size-3.5" aria-hidden /> : index + 1}
           </span>
-          <span className={index === currentIndex ? 'font-medium text-slate-900' : 'text-slate-500'}>{step.label}</span>
-          {index < steps.length - 1 && <span aria-hidden className="mx-1 h-px w-6 bg-slate-300" />}
+          <span className={index === currentIndex ? 'font-medium text-fg' : 'text-fg-3'}>{step.label}</span>
+          {index < steps.length - 1 && <span aria-hidden className="mx-1 h-px w-6 bg-line-strong" />}
         </li>
       ))}
     </ol>
@@ -113,7 +113,7 @@ export function Importar() {
           action={
             <Link
               to="/contas"
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-solid hover:bg-accent-hover"
             >
               Ir para Contas
             </Link>
@@ -181,7 +181,7 @@ export function Importar() {
 
       {step.name === 'arquivo' && (
         <div className="max-w-2xl space-y-5">
-          <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+          <div className="rounded-2xl bg-surface p-5 ring-1 ring-line">
             <Select
               label="Conta de destino"
               value={destino.id}
@@ -222,9 +222,9 @@ export function Importar() {
 
       {step.name === 'revisao' && (
         <>
-          <p className="mb-4 text-sm text-slate-600">
-            Confira as transações de <strong className="text-slate-900">{file?.name}</strong> que entrarão na conta{' '}
-            <strong className="text-slate-900">{destino.nome}</strong>. Nada foi gravado ainda.
+          <p className="mb-4 text-sm text-fg-2">
+            Confira as transações de <strong className="text-fg">{file?.name}</strong> que entrarão na conta{' '}
+            <strong className="text-fg">{destino.nome}</strong>. Nada foi gravado ainda.
           </p>
           <AiNotice ia={step.review.ia} />
           <ImportReview
@@ -242,20 +242,20 @@ export function Importar() {
       )}
 
       {step.name === 'concluido' && (
-        <div className="flex max-w-2xl flex-col items-center rounded-2xl bg-white px-6 py-12 text-center ring-1 ring-slate-200">
-          <CircleCheck className="size-12 text-emerald-600" aria-hidden />
-          <h2 className="mt-4 text-lg font-semibold text-slate-900">
+        <div className="flex max-w-2xl flex-col items-center rounded-2xl bg-surface px-6 py-12 text-center ring-1 ring-line">
+          <CircleCheck className="size-12 text-success" aria-hidden />
+          <h2 className="mt-4 text-lg font-semibold text-fg">
             {step.result.importadas === 0
               ? 'Nenhuma transação nova foi importada'
               : `${pluralize(step.result.importadas, 'transação importada', 'transações importadas')}`}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-fg-2">
             Conta: {destino.nome}.
             {step.result.ignoradas > 0 &&
               ` ${pluralize(step.result.ignoradas, 'transação ignorada', 'transações ignoradas')} por já ${step.result.ignoradas === 1 ? 'existir' : 'existirem'} na conta.`}
           </p>
           {step.result.alertas > 0 && (
-            <p role="status" className="mt-2 rounded-lg bg-amber-50 px-3 py-1.5 text-sm text-amber-900">
+            <p role="status" className="mt-2 rounded-lg bg-warning-soft px-3 py-1.5 text-sm text-warning-strong">
               {step.result.alertas === 1 ? 'A importação gerou 1 alerta novo' : `A importação gerou ${step.result.alertas} alertas novos`}. Veja no
               sino de alertas.
             </p>
@@ -263,7 +263,7 @@ export function Importar() {
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <Link
               to={`/transacoes?conta=${destino.id}&periodo=tudo`}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-solid hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Ver transações da conta
             </Link>

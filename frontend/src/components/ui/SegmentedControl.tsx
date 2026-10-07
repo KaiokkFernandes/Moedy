@@ -10,7 +10,7 @@ interface SegmentedControlProps<T extends string> {
 /** Escolha entre poucas opções lado a lado (ex.: Despesa / Receita). */
 export function SegmentedControl<T extends string>({ label, value, onChange, options }: SegmentedControlProps<T>) {
   return (
-    <div role="radiogroup" aria-label={label} className="grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-slate-100 p-1">
+    <div role="radiogroup" aria-label={label} className="grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-subtle p-1">
       {options.map((option) => {
         const active = option.value === value
         return (
@@ -21,10 +21,10 @@ export function SegmentedControl<T extends string>({ label, value, onChange, opt
             aria-checked={active}
             onClick={() => onChange(option.value)}
             className={clsx(
-              'rounded-md px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
+              'rounded-md px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
               active
-                ? clsx('bg-white shadow-sm', option.activeClassName ?? 'text-slate-900')
-                : 'text-slate-600 hover:text-slate-900',
+                ? clsx('bg-surface shadow-sm', option.activeClassName ?? 'text-fg')
+                : 'text-fg-2 hover:text-fg',
             )}
           >
             {option.label}

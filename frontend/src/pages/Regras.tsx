@@ -81,18 +81,18 @@ export function Regras() {
     <>
       <PageHeader title="Regras" action={newButton} />
 
-      <p className="mb-6 max-w-2xl text-sm text-slate-600">
+      <p className="mb-6 max-w-2xl text-sm text-fg-2">
         Uma regra liga uma palavra-chave a uma categoria. Ao importar um extrato, as transações cuja descrição contém a
         palavra-chave já chegam categorizadas. Quando mais de uma regra serve, vale a palavra-chave mais longa.
       </p>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-surface p-4 ring-1 ring-line">
         <Button variant="secondary" onClick={() => applyRules.mutate()} loading={applyRules.isPending}>
           <WandSparkles className="size-4" aria-hidden />
           Aplicar regras às transações sem categoria
         </Button>
         {applyRules.isSuccess && (
-          <p role="status" className="text-sm text-slate-700">
+          <p role="status" className="text-sm text-fg-2">
             {applyRules.data.categorizadas === 0
               ? 'Nenhuma transação sem categoria corresponde às regras.'
               : `${pluralize(applyRules.data.categorizadas, 'transação categorizada', 'transações categorizadas')}.`}{' '}
@@ -101,7 +101,7 @@ export function Regras() {
           </p>
         )}
         {applyRules.isError && (
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-sm text-danger-strong">
             {getErrorMessage(applyRules.error, 'Não foi possível aplicar as regras.')}
           </p>
         )}
@@ -115,9 +115,9 @@ export function Regras() {
           action={newButton}
         />
       ) : (
-        <section aria-label="Lista de regras" className="rounded-2xl bg-white ring-1 ring-slate-200">
-          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 px-5 py-3">
-            <h2 className="font-medium text-slate-900">
+        <section aria-label="Lista de regras" className="rounded-2xl bg-surface ring-1 ring-line">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line px-5 py-3">
+            <h2 className="font-medium text-fg">
               {pluralize(rules.data.length, 'regra', 'regras')}
             </h2>
             <div className="w-full sm:w-64">
@@ -131,13 +131,13 @@ export function Regras() {
             </div>
           </div>
           {visible.length === 0 ? (
-            <p className="px-5 py-8 text-sm text-slate-500">Nenhuma regra corresponde ao filtro.</p>
+            <p className="px-5 py-8 text-sm text-fg-3">Nenhuma regra corresponde ao filtro.</p>
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-line">
               {visible.map((rule) => (
                 <li key={rule.id} className="flex items-center gap-3 px-5 py-2">
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">{rule.palavraChave}</span>
-                  <span className="flex min-w-0 flex-1 items-center gap-2 text-sm text-slate-600">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-fg">{rule.palavraChave}</span>
+                  <span className="flex min-w-0 flex-1 items-center gap-2 text-sm text-fg-2">
                     <CategoryIcon icone={rule.category.icone} cor={rule.category.cor} size="sm" />
                     <span className="truncate">{rule.category.nome}</span>
                   </span>
@@ -168,7 +168,7 @@ export function Regras() {
         error={deleteRule.isError ? getErrorMessage(deleteRule.error, 'Não foi possível excluir a regra.') : ''}
       >
         <p>
-          Excluir a regra <strong className="text-slate-900">{deleting?.palavraChave}</strong>?
+          Excluir a regra <strong className="text-fg">{deleting?.palavraChave}</strong>?
         </p>
         <p>As transações já categorizadas por ela continuam como estão.</p>
       </ConfirmDialog>

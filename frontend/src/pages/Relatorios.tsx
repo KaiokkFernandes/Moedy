@@ -67,12 +67,12 @@ export function Relatorios() {
       />
 
       {exportError && (
-        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="mb-4 rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger-strong">
           {exportError}
         </p>
       )}
 
-      <section aria-label="Filtros" className="mb-6 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+      <section aria-label="Filtros" className="mb-6 rounded-2xl bg-surface p-4 ring-1 ring-line">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {SHORTCUTS.map(({ label, period }) => {
             const { inicio, fim } = period()
@@ -84,8 +84,8 @@ export function Relatorios() {
                 aria-pressed={active}
                 onClick={() => setPeriod(inicio, fim)}
                 className={clsx(
-                  'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
-                  active ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                  'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+                  active ? 'bg-accent text-on-solid' : 'bg-subtle text-fg-2 hover:bg-line',
                 )}
               >
                 {label}
@@ -121,7 +121,7 @@ export function Relatorios() {
         </div>
       </section>
 
-      <div role="tablist" aria-label="Relatórios" className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
+      <div role="tablist" aria-label="Relatórios" className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
         {REPORT_TABS.map((tab) => {
           const selected = tab.id === values.aba
           return (
@@ -134,10 +134,10 @@ export function Relatorios() {
               aria-controls="painel-relatorio"
               onClick={() => update({ aba: tab.id === 'categorias' ? null : tab.id })}
               className={clsx(
-                '-mb-px border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-slate-400',
+                '-mb-px border-b-2 px-4 py-2 text-sm font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus',
                 selected
-                  ? 'border-emerald-600 text-emerald-700'
-                  : 'border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900',
+                  ? 'border-accent text-accent-fg'
+                  : 'border-transparent text-fg-2 hover:border-line-strong hover:text-fg',
               )}
             >
               {tab.label}

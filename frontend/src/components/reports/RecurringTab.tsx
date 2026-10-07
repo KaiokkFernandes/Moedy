@@ -18,39 +18,39 @@ export function RecurringTab({ accountId }: { accountId?: string }) {
       {data && (
         <>
           <dl className="mb-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl bg-slate-50 p-4">
-              <dt className="text-sm text-slate-500">Total por mês</dt>
-              <dd className="mt-1 text-xl font-semibold text-slate-900">{formatCurrency(data.totalMensal)}</dd>
+            <div className="rounded-xl bg-page p-4">
+              <dt className="text-sm text-fg-3">Total por mês</dt>
+              <dd className="mt-1 text-xl font-semibold text-fg">{formatCurrency(data.totalMensal)}</dd>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4">
-              <dt className="text-sm text-slate-500">Custo anual estimado</dt>
-              <dd className="mt-1 text-xl font-semibold text-slate-900">{formatCurrency(data.totalAnual)}</dd>
+            <div className="rounded-xl bg-page p-4">
+              <dt className="text-sm text-fg-3">Custo anual estimado</dt>
+              <dd className="mt-1 text-xl font-semibold text-fg">{formatCurrency(data.totalAnual)}</dd>
             </div>
-            <div className="rounded-xl bg-slate-50 p-4">
-              <dt className="text-sm text-slate-500">Cobranças detectadas</dt>
-              <dd className="mt-1 text-xl font-semibold text-slate-900">{data.recorrentes.length}</dd>
+            <div className="rounded-xl bg-page p-4">
+              <dt className="text-sm text-fg-3">Cobranças detectadas</dt>
+              <dd className="mt-1 text-xl font-semibold text-fg">{data.recorrentes.length}</dd>
             </div>
           </dl>
 
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+              <tr className="border-b border-line text-left text-xs text-fg-3">
                 <th scope="col" className="py-2 font-medium">Cobrança</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">Por mês</th>
                 <th scope="col" className="py-2 text-right font-medium">Por ano</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {data.recorrentes.map((item) => (
                 <tr key={item.nome}>
                   <td className="py-2">
-                    <p className="font-medium text-slate-900">{item.nome}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="font-medium text-fg">{item.nome}</p>
+                    <p className="text-xs text-fg-3">
                       {pluralize(item.mesesSeguidos, 'mês seguido', 'meses seguidos')} · última em {formatDate(item.ultimaCobranca)}
                     </p>
                   </td>
-                  <td className="px-2 py-2 text-right text-slate-700 tabular-nums">{formatCurrency(item.valorMedio)}</td>
-                  <td className="py-2 text-right font-medium text-slate-900 tabular-nums">{formatCurrency(item.custoAnual)}</td>
+                  <td className="px-2 py-2 text-right text-fg-2 tabular-nums">{formatCurrency(item.valorMedio)}</td>
+                  <td className="py-2 text-right font-medium text-fg tabular-nums">{formatCurrency(item.custoAnual)}</td>
                 </tr>
               ))}
             </tbody>

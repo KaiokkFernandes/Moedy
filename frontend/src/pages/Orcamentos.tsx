@@ -161,7 +161,7 @@ export function Orcamentos() {
       {notice && (
         <p
           role={notice.error ? 'alert' : 'status'}
-          className={clsx('mb-4 rounded-lg px-4 py-2.5 text-sm', notice.error ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-800')}
+          className={clsx('mb-4 rounded-lg px-4 py-2.5 text-sm', notice.error ? 'bg-danger-soft text-danger-strong' : 'bg-accent-soft text-success-strong')}
         >
           {notice.message}
         </p>
@@ -190,19 +190,19 @@ export function Orcamentos() {
         />
       ) : (
         <>
-          <section aria-label="Resumo do mês" className="mb-6 rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+          <section aria-label="Resumo do mês" className="mb-6 rounded-2xl bg-surface p-5 ring-1 ring-line">
             <dl className="grid grid-cols-3 gap-3">
               <div>
-                <dt className="text-sm text-slate-500">Total orçado</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900 sm:text-2xl">{formatCurrency(resumo.totalOrcado)}</dd>
+                <dt className="text-sm text-fg-3">Total orçado</dt>
+                <dd className="mt-1 text-lg font-semibold text-fg sm:text-2xl">{formatCurrency(resumo.totalOrcado)}</dd>
               </div>
               <div>
-                <dt className="text-sm text-slate-500">Total gasto</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900 sm:text-2xl">{formatCurrency(resumo.totalGasto)}</dd>
+                <dt className="text-sm text-fg-3">Total gasto</dt>
+                <dd className="mt-1 text-lg font-semibold text-fg sm:text-2xl">{formatCurrency(resumo.totalGasto)}</dd>
               </div>
               <div>
-                <dt className="text-sm text-slate-500">{resumo.restante >= 0 ? 'Restante' : 'Acima do orçado'}</dt>
-                <dd className={clsx('mt-1 text-lg font-semibold sm:text-2xl', resumo.restante < 0 ? 'text-red-600' : 'text-slate-900')}>
+                <dt className="text-sm text-fg-3">{resumo.restante >= 0 ? 'Restante' : 'Acima do orçado'}</dt>
+                <dd className={clsx('mt-1 text-lg font-semibold sm:text-2xl', resumo.restante < 0 ? 'text-danger-fg' : 'text-fg')}>
                   {formatCurrency(Math.abs(resumo.restante))}
                 </dd>
               </div>
@@ -210,7 +210,7 @@ export function Orcamentos() {
             <div className="mt-4">
               <BudgetProgress percentual={resumo.percentual} status={statusOfPercent(resumo.percentual)} label="Total gasto do total orçado" />
             </div>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-fg-2">
               {formatPercent(resumo.percentual)} do total orçado em {pluralize(orcamentos.length, 'categoria', 'categorias')}
               {resumo.gastoSemOrcamento > 0 && ` · ${formatCurrency(resumo.gastoSemOrcamento)} gastos em categorias sem orçamento`}
             </p>
@@ -236,17 +236,17 @@ export function Orcamentos() {
       )}
 
       {semOrcamento.length > 0 && (
-        <section aria-label="Categorias sem orçamento" className="mt-6 rounded-2xl bg-white ring-1 ring-slate-200">
-          <div className="border-b border-slate-200 px-5 py-3">
-            <h2 className="font-medium text-slate-900">Categorias sem orçamento</h2>
-            <p className="text-sm text-slate-500">Tiveram gasto em {formatMonthLong(mes)}, mas não têm limite definido.</p>
+        <section aria-label="Categorias sem orçamento" className="mt-6 rounded-2xl bg-surface ring-1 ring-line">
+          <div className="border-b border-line px-5 py-3">
+            <h2 className="font-medium text-fg">Categorias sem orçamento</h2>
+            <p className="text-sm text-fg-3">Tiveram gasto em {formatMonthLong(mes)}, mas não têm limite definido.</p>
           </div>
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-line">
             {semOrcamento.map((item) => (
               <li key={item.categoryId ?? 'sem'} className="flex items-center gap-3 px-5 py-2.5">
                 <CategoryIcon icone={item.icone} cor={item.cor} size="sm" />
-                <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">{item.nome}</span>
-                <span className="text-sm text-slate-700 tabular-nums">{formatCurrency(item.gasto)}</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-fg">{item.nome}</span>
+                <span className="text-sm text-fg-2 tabular-nums">{formatCurrency(item.gasto)}</span>
                 {item.categoryId ? (
                   <Button variant="secondary" size="sm" onClick={() => setForm({ categoryId: item.categoryId! })}>
                     <Plus className="size-4" aria-hidden />
@@ -257,7 +257,7 @@ export function Orcamentos() {
                   </Button>
                 ) : (
                   // Transações sem categoria não podem ter orçamento: primeiro precisam ser categorizadas
-                  <Link to={transactionsHref(null)} className="text-sm font-medium text-emerald-700 hover:underline">
+                  <Link to={transactionsHref(null)} className="text-sm font-medium text-accent-fg hover:underline">
                     Categorizar
                   </Link>
                 )}
@@ -287,7 +287,7 @@ export function Orcamentos() {
         error={deleteBudget.isError ? getErrorMessage(deleteBudget.error, 'Não foi possível excluir o orçamento.') : ''}
       >
         <p>
-          Excluir o orçamento de <strong className="text-slate-900">{deleting?.categoria.nome}</strong> em {formatMonthLong(mes)}?
+          Excluir o orçamento de <strong className="text-fg">{deleting?.categoria.nome}</strong> em {formatMonthLong(mes)}?
         </p>
         <p>As transações da categoria não são alteradas.</p>
       </ConfirmDialog>

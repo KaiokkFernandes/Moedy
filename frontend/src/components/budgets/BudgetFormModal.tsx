@@ -71,7 +71,7 @@ function BudgetForm({ onClose, mes, ano, suggestions, budget, defaultCategoryId 
   if (!budget && options.length === 0) {
     return (
       <>
-        <p className="text-sm text-slate-600">Todas as categorias de despesa já têm orçamento neste mês.</p>
+        <p className="text-sm text-fg-2">Todas as categorias de despesa já têm orçamento neste mês.</p>
         <ModalActions>
           <Button variant="secondary" onClick={onClose}>
             Fechar
@@ -104,11 +104,11 @@ function BudgetForm({ onClose, mes, ano, suggestions, budget, defaultCategoryId 
       <CurrencyInput label="Limite do mês" value={valorLimite} onChange={setValorLimite} error={errors.valorLimite} />
 
       {suggestion && (
-        <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+        <div className="rounded-lg bg-page px-3 py-2 text-sm text-fg-2">
           {suggestion.sugestao ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span>
-                Nos últimos 3 meses, você gastou em média <strong className="text-slate-900">{formatCurrency(suggestion.media)}</strong>{' '}
+                Nos últimos 3 meses, você gastou em média <strong className="text-fg">{formatCurrency(suggestion.media)}</strong>{' '}
                 por mês em {suggestion.nome}.
               </span>
               <Button variant="secondary" size="sm" onClick={() => setValorLimite(suggestion.sugestao!)}>

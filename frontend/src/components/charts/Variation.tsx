@@ -14,18 +14,18 @@ interface VariationProps {
 /** Variação vs período anterior: seta + percentual. A cor diz se a mudança é boa ou ruim. */
 export function Variation({ value, label, upIsGood = true }: VariationProps) {
   if (value === null) {
-    return <p className="mt-1 text-xs text-slate-500">Sem dados para comparar</p>
+    return <p className="mt-1 text-xs text-fg-3">Sem dados para comparar</p>
   }
 
   const Icon = value > 0 ? ArrowUp : value < 0 ? ArrowDown : Minus
   const good = value === 0 ? null : value > 0 === upIsGood
 
   return (
-    <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-slate-500">
+    <p className="mt-1 flex flex-wrap items-center gap-x-1 text-xs text-fg-3">
       <span
         className={clsx(
           'inline-flex items-center gap-0.5 font-medium',
-          good === null ? 'text-slate-600' : good ? 'text-emerald-700' : 'text-red-700',
+          good === null ? 'text-fg-2' : good ? 'text-accent-fg' : 'text-danger-strong',
         )}
       >
         <Icon className="size-3.5" aria-hidden />

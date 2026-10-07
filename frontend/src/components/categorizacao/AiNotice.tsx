@@ -6,7 +6,7 @@ export function AiNotice({ ia }: { ia: IaSummary }) {
   if (ia.status === 'OK' && ia.naoEnviadas === 0) return null
 
   if (ia.status === 'DESLIGADA') {
-    return <p className="text-sm text-slate-500">As sugestões por IA estão desligadas. Você pode ativá-las em Configurações.</p>
+    return <p className="text-sm text-fg-3">As sugestões por IA estão desligadas. Você pode ativá-las em Configurações.</p>
   }
 
   let texto: string
@@ -21,7 +21,7 @@ export function AiNotice({ ia }: { ia: IaSummary }) {
   }
 
   return (
-    <p role="status" className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm text-slate-700">
+    <p role="status" className="rounded-xl bg-subtle px-4 py-2.5 text-sm text-fg-2">
       {texto}
     </p>
   )

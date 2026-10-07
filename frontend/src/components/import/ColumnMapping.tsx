@@ -92,9 +92,9 @@ export function ColumnMapping({ data, initial, loading, error, onBack, onSubmit 
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
-      <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-        <h2 className="font-medium text-slate-900">Quais colunas usar?</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <div className="rounded-2xl bg-surface p-5 ring-1 ring-line">
+        <h2 className="font-medium text-fg">Quais colunas usar?</h2>
+        <p className="mt-1 text-sm text-fg-2">
           O arquivo tem {pluralize(data.totalLinhas, 'linha', 'linhas')} e {data.cabecalhos.length} colunas. Confira a
           sugestão abaixo e ajuste se precisar.
         </p>
@@ -112,7 +112,7 @@ export function ColumnMapping({ data, initial, loading, error, onBack, onSubmit 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 {columnSelect('Coluna do valor', 'valor')}
-                <p className="mt-1 text-xs text-slate-500">Valores negativos viram despesas; positivos, receitas.</p>
+                <p className="mt-1 text-xs text-fg-3">Valores negativos viram despesas; positivos, receitas.</p>
               </div>
             </div>
           ) : (
@@ -124,23 +124,23 @@ export function ColumnMapping({ data, initial, loading, error, onBack, onSubmit 
         </div>
       </div>
 
-      <section aria-label="Prévia do arquivo" className="rounded-2xl bg-white ring-1 ring-slate-200">
-        <h2 className="border-b border-slate-200 px-5 py-3 font-medium text-slate-900">
+      <section aria-label="Prévia do arquivo" className="rounded-2xl bg-surface ring-1 ring-line">
+        <h2 className="border-b border-line px-5 py-3 font-medium text-fg">
           Prévia das primeiras linhas
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left">
+              <tr className="border-b border-line text-left">
                 {data.cabecalhos.map((header, index) => (
                   <th
                     key={index}
                     scope="col"
-                    className={clsx('px-4 py-2 font-medium whitespace-nowrap', roleByColumn.has(index) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-500')}
+                    className={clsx('px-4 py-2 font-medium whitespace-nowrap', roleByColumn.has(index) ? 'bg-accent-soft text-success-strong' : 'text-fg-3')}
                   >
                     {header || `Coluna ${index + 1}`}
                     {roleByColumn.has(index) && (
-                      <span className="ml-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-medium text-white">
+                      <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-on-solid">
                         {roleByColumn.get(index)}
                       </span>
                     )}
@@ -148,13 +148,13 @@ export function ColumnMapping({ data, initial, loading, error, onBack, onSubmit 
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {data.amostra.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {data.cabecalhos.map((_, index) => (
                     <td
                       key={index}
-                      className={clsx('px-4 py-2 whitespace-nowrap', roleByColumn.has(index) ? 'bg-emerald-50/50 text-slate-900' : 'text-slate-500')}
+                      className={clsx('px-4 py-2 whitespace-nowrap', roleByColumn.has(index) ? 'bg-accent-soft text-fg' : 'text-fg-3')}
                     >
                       {row[index] ?? ''}
                     </td>

@@ -1,4 +1,6 @@
 import clsx from 'clsx'
+import { useTheme } from '@/hooks/useTheme'
+import { corParaTema } from '@/lib/color'
 import { ChevronDown } from 'lucide-react'
 import type { Category } from '@/types/finance'
 
@@ -16,13 +18,15 @@ interface CategoryPillSelectProps {
 
 /** Select compacto de categoria, em formato de etiqueta com a cor da categoria. Usado em linhas de tabela. */
 export function CategoryPillSelect({ label, value, onChange, options, disabled, error }: CategoryPillSelectProps) {
-  const cor = options.find((category) => category.id === value)?.cor
+  const { escuro } = useTheme()
+  const corSalva = options.find((category) => category.id === value)?.cor
+  const cor = corSalva ? corParaTema(corSalva, escuro) : undefined
 
   return (
     <div className="relative inline-flex max-w-full items-center">
       <span
         aria-hidden
-        className={clsx('pointer-events-none absolute left-2.5 size-2 rounded-full', !cor && 'bg-slate-300')}
+        className={clsx('pointer-events-none absolute left-2.5 size-2 rounded-full', !cor && 'bg-line-strong')}
         style={cor ? { backgroundColor: cor } : undefined}
       />
       <select
@@ -32,12 +36,12 @@ export function CategoryPillSelect({ label, value, onChange, options, disabled, 
         onChange={(event) => onChange(event.target.value || null)}
         title={error}
         className={clsx(
-          'max-w-full cursor-pointer appearance-none truncate rounded-full border py-1 pr-7 pl-6 text-xs font-medium focus:ring-2 focus:ring-emerald-100 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60',
+          'max-w-full cursor-pointer appearance-none truncate rounded-full border py-1 pr-7 pl-6 text-xs font-medium focus:ring-2 focus:ring-accent-soft-strong focus:outline-none disabled:cursor-not-allowed disabled:opacity-60',
           error
-            ? 'border-red-400 bg-red-50 text-red-700'
+            ? 'border-danger bg-danger-soft text-danger-strong'
             : value
-              ? 'border-transparent bg-slate-100 text-slate-700 hover:border-slate-300'
-              : 'border-dashed border-slate-300 bg-white text-slate-500 hover:border-slate-400',
+              ? 'border-transparent bg-subtle text-fg-2 hover:border-line-strong'
+              : 'border-dashed border-line-strong bg-surface text-fg-3 hover:border-line-strong',
         )}
       >
         <option value="">Sem categoria</option>
@@ -47,7 +51,7 @@ export function CategoryPillSelect({ label, value, onChange, options, disabled, 
           </option>
         ))}
       </select>
-      <ChevronDown aria-hidden className="pointer-events-none absolute right-2 size-3.5 text-slate-500" />
+      <ChevronDown aria-hidden className="pointer-events-none absolute right-2 size-3.5 text-fg-3" />
     </div>
   )
 }

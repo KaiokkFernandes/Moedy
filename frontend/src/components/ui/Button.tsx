@@ -3,10 +3,10 @@ import clsx from 'clsx'
 import { LoaderCircle } from 'lucide-react'
 
 const VARIANTS = {
-  primary: 'bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:outline-emerald-600',
-  secondary: 'bg-white text-slate-700 ring-1 ring-slate-300 ring-inset hover:bg-slate-50 focus-visible:outline-slate-400',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:outline-red-600',
-  ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-slate-400',
+  primary: 'bg-accent text-on-solid hover:bg-accent-hover focus-visible:outline-accent',
+  secondary: 'bg-surface text-fg-2 ring-1 ring-line-strong ring-inset hover:bg-page focus-visible:outline-focus',
+  danger: 'bg-danger text-on-solid hover:bg-danger-hover focus-visible:outline-danger',
+  ghost: 'text-fg-2 hover:bg-subtle hover:text-fg focus-visible:outline-focus',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -59,8 +59,8 @@ export function IconButton({ label, danger, className, children, ...buttonProps 
       aria-label={label}
       title={label}
       className={clsx(
-        'rounded-lg p-2 text-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:opacity-50',
-        danger ? 'hover:bg-red-50 hover:text-red-600' : 'hover:bg-slate-100 hover:text-slate-900',
+        'rounded-lg p-2 text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50',
+        danger ? 'hover:bg-danger-soft hover:text-danger-fg' : 'hover:bg-subtle hover:text-fg',
         className,
       )}
       {...buttonProps}

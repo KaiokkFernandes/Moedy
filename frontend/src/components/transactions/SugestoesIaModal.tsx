@@ -102,9 +102,9 @@ function SugestoesBody({ filters, categories, onClose }: Omit<SugestoesIaModalPr
       <div className="space-y-4">
         <FormAlert message={getErrorMessage(suggest.error, 'Não foi possível analisar as transações.')} />
         {semIa && (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-fg-2">
             Ligue a opção em{' '}
-            <Link to="/configuracoes" className="font-medium text-emerald-700 hover:underline" onClick={onClose}>
+            <Link to="/configuracoes" className="font-medium text-accent-fg hover:underline" onClick={onClose}>
               Configurações
             </Link>{' '}
             para usar as sugestões por IA.
@@ -138,7 +138,7 @@ function SugestoesBody({ filters, categories, onClose }: Omit<SugestoesIaModalPr
     <div className="space-y-4">
       <AiNotice ia={{ ...result.ia, motivo: result.ia.motivo }} />
 
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-fg-2">
         {result.itens.length === 0
           ? 'Nenhuma sugestão para as transações sem categoria deste filtro.'
           : `${pluralize(result.itens.length, 'sugestão', 'sugestões')} para revisar.`}
@@ -147,7 +147,7 @@ function SugestoesBody({ filters, categories, onClose }: Omit<SugestoesIaModalPr
       </p>
 
       {result.itens.length > 0 && (
-        <ul className="max-h-96 divide-y divide-slate-100 overflow-y-auto rounded-xl ring-1 ring-slate-200">
+        <ul className="max-h-96 divide-y divide-line overflow-y-auto rounded-xl ring-1 ring-line">
           {result.itens.map((item) => {
             const options = categories.filter((category) => category.tipo === item.tipo)
             const current = categoryById[item.transactionId] ?? item.categoryId
@@ -158,11 +158,11 @@ function SugestoesBody({ filters, categories, onClose }: Omit<SugestoesIaModalPr
                   aria-label={`Aplicar sugestão para ${item.descricao}`}
                   checked={selected.has(item.transactionId)}
                   onChange={() => toggle(item.transactionId)}
-                  className="mt-1 size-4 rounded border-slate-300 accent-emerald-600"
+                  className="mt-1 size-4 rounded border-line-strong accent-accent"
                 />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-900">{item.descricao}</p>
-                  <p className={clsx('text-xs tabular-nums', item.tipo === 'RECEITA' ? 'text-emerald-700' : 'text-red-700')}>
+                  <p className="truncate text-sm font-medium text-fg">{item.descricao}</p>
+                  <p className={clsx('text-xs tabular-nums', item.tipo === 'RECEITA' ? 'text-accent-fg' : 'text-danger-strong')}>
                     {formatDate(item.data)} · {item.tipo === 'RECEITA' ? '+' : '−'} {formatCurrency(item.valor)}
                   </p>
                 </div>

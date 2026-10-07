@@ -34,12 +34,12 @@ export function FileDropzone({ file, onSelect, error }: FileDropzoneProps) {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={clsx(
-          'flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-emerald-600',
+          'flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent',
           dragging
-            ? 'border-emerald-500 bg-emerald-50'
+            ? 'border-accent bg-accent-soft'
             : error
-              ? 'border-red-300 bg-red-50/50'
-              : 'border-slate-300 bg-white hover:border-slate-400',
+              ? 'border-danger bg-danger-soft'
+              : 'border-line-strong bg-surface hover:border-line-strong',
         )}
       >
         <input
@@ -53,21 +53,21 @@ export function FileDropzone({ file, onSelect, error }: FileDropzoneProps) {
             event.target.value = ''
           }}
         />
-        <span className="flex size-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+        <span className="flex size-12 items-center justify-center rounded-xl bg-subtle text-fg-3">
           <Upload className="size-6" aria-hidden />
         </span>
-        <span className="mt-4 text-sm font-medium text-slate-900">
-          Arraste o extrato aqui ou <span className="text-emerald-700 underline">clique para escolher</span>
+        <span className="mt-4 text-sm font-medium text-fg">
+          Arraste o extrato aqui ou <span className="text-accent-fg underline">clique para escolher</span>
         </span>
-        <span className="mt-1 text-xs text-slate-500">Arquivos .ofx ou .csv, até 5 MB</span>
+        <span className="mt-1 text-xs text-fg-3">Arquivos .ofx ou .csv, até 5 MB</span>
       </label>
 
       {file && (
-        <div className="mt-3 flex items-center gap-3 rounded-xl bg-white px-4 py-2.5 ring-1 ring-slate-200">
-          <FileText className="size-5 shrink-0 text-slate-500" aria-hidden />
+        <div className="mt-3 flex items-center gap-3 rounded-xl bg-surface px-4 py-2.5 ring-1 ring-line">
+          <FileText className="size-5 shrink-0 text-fg-3" aria-hidden />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-slate-900">{file.name}</p>
-            <p className="text-xs text-slate-500">{formatSize(file.size)}</p>
+            <p className="truncate text-sm font-medium text-fg">{file.name}</p>
+            <p className="text-xs text-fg-3">{formatSize(file.size)}</p>
           </div>
           <IconButton label="Remover arquivo" onClick={() => onSelect(null)}>
             <X className="size-4" />
@@ -76,7 +76,7 @@ export function FileDropzone({ file, onSelect, error }: FileDropzoneProps) {
       )}
 
       {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-sm text-danger-fg">
           {error}
         </p>
       )}

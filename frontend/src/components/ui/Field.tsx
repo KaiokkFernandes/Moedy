@@ -12,16 +12,16 @@ interface FieldProps {
 export function Field({ id, label, error, hint, children }: FieldProps) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-fg-2">
         {label}
       </label>
       {children}
       {error ? (
-        <p id={`${id}-erro`} className="mt-1 text-sm text-red-600">
+        <p id={`${id}-erro`} className="mt-1 text-sm text-danger-fg">
           {error}
         </p>
       ) : (
-        hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>
+        hint && <p className="mt-1 text-xs text-fg-3">{hint}</p>
       )}
     </div>
   )

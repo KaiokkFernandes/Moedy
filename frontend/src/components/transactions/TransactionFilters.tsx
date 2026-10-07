@@ -36,7 +36,7 @@ export function TransactionFilters({ filters, accounts, categories }: Transactio
   const receitas = categories.filter((category) => category.tipo === 'RECEITA')
 
   return (
-    <section aria-label="Filtros" className="mb-6 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+    <section aria-label="Filtros" className="mb-6 rounded-2xl bg-surface p-4 ring-1 ring-line">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {SHORTCUTS.map(({ label, period }) => {
           const { inicio, fim } = period()
@@ -48,24 +48,24 @@ export function TransactionFilters({ filters, accounts, categories }: Transactio
               aria-pressed={active}
               onClick={() => setPeriod(inicio, fim)}
               className={clsx(
-                'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
-                active ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+                'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+                active ? 'bg-accent text-on-solid' : 'bg-subtle text-fg-2 hover:bg-line',
               )}
             >
               {label}
             </button>
           )
         })}
-        <span aria-hidden className="mx-1 h-5 w-px bg-slate-200" />
+        <span aria-hidden className="mx-1 h-5 w-px bg-line" />
         <button
           type="button"
           aria-pressed={values.categoria === SEM_CATEGORIA}
           onClick={() => update({ categoria: values.categoria === SEM_CATEGORIA ? null : SEM_CATEGORIA })}
           className={clsx(
-            'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400',
+            'rounded-full px-3 py-1 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
             values.categoria === SEM_CATEGORIA
-              ? 'bg-emerald-600 text-white'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
+              ? 'bg-accent text-on-solid'
+              : 'bg-subtle text-fg-2 hover:bg-line',
           )}
         >
           Sem categoria

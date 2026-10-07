@@ -4,13 +4,17 @@ import clsx from 'clsx'
 import { Sparkles } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
+import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { ErrorState, Loading } from '@/components/ui/States'
+import { useTheme } from '@/hooks/useTheme'
+import { TEMA_LABEL, TEMAS } from '@/lib/theme'
 import { useAiSettings, useUpdateAiSettings } from '@/hooks/useAi'
 import { getErrorMessage } from '@/lib/api'
 import { formatDate } from '@/lib/format'
 
 export function Configuracoes() {
   const settings = useAiSettings()
+  const { preferencia, setPreferencia } = useTheme()
   const update = useUpdateAiSettings()
   const [avisando, setAvisando] = useState(false)
   const [aceite, setAceite] = useState(false)
@@ -52,16 +56,33 @@ export function Configuracoes() {
     <>
       <PageHeader title="Configurações" />
 
-      <section aria-labelledby="ia-titulo" className="max-w-2xl rounded-2xl bg-white p-6 ring-1 ring-slate-200">
+      <section aria-labelledby="aparencia-titulo" className="mb-6 max-w-2xl rounded-2xl bg-surface p-6 ring-1 ring-line">
+        <h2 id="aparencia-titulo" className="font-medium text-fg">
+          Aparência
+        </h2>
+        <p className="mt-1 text-sm text-fg-2">
+          Sistema segue o modo do aparelho e muda junto se ele mudar com o app aberto.
+        </p>
+        <div className="mt-4 max-w-sm">
+          <SegmentedControl
+            label="Tema"
+            value={preferencia}
+            onChange={setPreferencia}
+            options={TEMAS.map((opcao) => ({ value: opcao, label: TEMA_LABEL[opcao] }))}
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="ia-titulo" className="max-w-2xl rounded-2xl bg-surface p-6 ring-1 ring-line">
         <div className="flex items-start gap-4">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ai-soft text-ai-fg">
             <Sparkles className="size-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 id="ia-titulo" className="font-medium text-slate-900">
+            <h2 id="ia-titulo" className="font-medium text-fg">
               Sugerir categorias com IA na importação
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-fg-2">
               Para os lançamentos que as regras e a memória não reconhecem, a IA sugere uma categoria. Ela só sugere: nada é
               gravado sem a sua revisão.
             </p>
@@ -74,32 +95,32 @@ export function Configuracoes() {
             disabled={update.isPending}
             onClick={() => (ligada ? alterar(false) : setAvisando(true))}
             className={clsx(
-              'relative mt-1 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:opacity-60',
-              ligada ? 'bg-emerald-600' : 'bg-slate-300',
+              'relative mt-1 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60',
+              ligada ? 'bg-accent' : 'bg-line-strong',
             )}
           >
             <span
               aria-hidden
-              className={clsx('inline-block size-5 rounded-full bg-white shadow transition-transform', ligada ? 'translate-x-5' : 'translate-x-0.5')}
+              className={clsx('inline-block size-5 rounded-full bg-surface shadow transition-transform', ligada ? 'translate-x-5' : 'translate-x-0.5')}
             />
           </button>
         </div>
 
-        <p className="mt-4 text-sm text-slate-600">
+        <p className="mt-4 text-sm text-fg-2">
           Status:{' '}
-          <strong className={ligada ? 'text-emerald-700' : 'text-slate-900'}>{ligada ? 'ligada' : 'desligada'}</strong>
+          <strong className={ligada ? 'text-accent-fg' : 'text-fg'}>{ligada ? 'ligada' : 'desligada'}</strong>
           {ligada && data.iaConsentidaEm && <> · aceita em {formatDate(data.iaConsentidaEm.slice(0, 10))}</>}
         </p>
 
         {!data.iaDisponivel && (
-          <p role="status" className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p role="status" className="mt-4 rounded-lg bg-warning-soft px-3 py-2 text-sm text-warning-strong">
             O servidor não tem a chave da API configurada (ANTHROPIC_API_KEY). Enquanto isso, a importação segue só com regras e
             memória.
           </p>
         )}
 
         {avisando && !ligada && (
-          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          <div className="mt-5 rounded-xl border border-warning-line bg-warning-soft p-4 text-sm text-warning-strong">
             <p className="font-medium">Antes de ligar, leia com atenção:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
@@ -115,7 +136,7 @@ export function Configuracoes() {
                 type="checkbox"
                 checked={aceite}
                 onChange={(e) => setAceite(e.target.checked)}
-                className="mt-0.5 size-4 rounded border-slate-300 accent-emerald-600"
+                className="mt-0.5 size-4 rounded border-line-strong accent-accent"
               />
               <span>Entendi que as descrições e os valores serão enviados à Anthropic para gerar sugestões.</span>
             </label>
@@ -131,15 +152,15 @@ export function Configuracoes() {
         )}
 
         {erro && (
-          <p role="alert" className="mt-4 text-sm text-red-700">
+          <p role="alert" className="mt-4 text-sm text-danger-strong">
             {erro}
           </p>
         )}
       </section>
 
-      <p className="mt-6 max-w-2xl text-sm text-slate-600">
+      <p className="mt-6 max-w-2xl text-sm text-fg-2">
         As regras de categorização continuam funcionando com a IA desligada. Elas são criadas na página{' '}
-        <Link to="/regras" className="font-medium text-emerald-700 hover:underline">
+        <Link to="/regras" className="font-medium text-accent-fg hover:underline">
           Regras
         </Link>
         .

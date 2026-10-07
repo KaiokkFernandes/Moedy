@@ -27,7 +27,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Modal open={open} onClose={onClose} title={title}>
-      <div className="space-y-3 text-sm text-slate-600">
+      <div className="space-y-3 text-sm text-fg-2">
         <FormAlert message={error} />
         {children}
       </div>

@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { Loading } from '@/components/ui/States'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -34,8 +35,8 @@ const NAV_LINKS = [
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2 font-semibold text-slate-900">
-      <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+    <div className="flex items-center gap-2 font-semibold text-fg">
+      <span className="flex size-8 items-center justify-center rounded-lg bg-accent-soft-strong text-success">
         <Wallet className="size-4" />
       </span>
       Finanças
@@ -57,18 +58,19 @@ export function AppLayout() {
   }, [menuOpen])
 
   return (
-    <div className="min-h-screen bg-slate-50 md:flex">
+    <div className="min-h-screen bg-page md:flex">
       {/* Barra superior (só no celular) */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-surface px-4 md:hidden">
         <Brand />
         <div className="flex items-center gap-1">
           <NotificationBell />
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Abrir menu"
             aria-expanded={menuOpen}
-            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+            className="rounded-lg p-2 text-fg-2 hover:bg-subtle"
           >
             <Menu className="size-5" />
           </button>
@@ -76,28 +78,29 @@ export function AppLayout() {
       </header>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-30 bg-slate-900/40 md:hidden" onClick={() => setMenuOpen(false)} aria-hidden />
+        <div className="fixed inset-0 z-30 bg-overlay md:hidden" onClick={() => setMenuOpen(false)} aria-hidden />
       )}
 
       {/* Sidebar: fixa no desktop, gaveta no celular */}
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200',
+          'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-surface transition-transform duration-200',
           'md:visible md:sticky md:top-0 md:h-screen md:shrink-0 md:translate-x-0',
           menuOpen ? 'translate-x-0' : 'invisible -translate-x-full',
         )}
       >
         <div className="flex h-14 items-center justify-between px-4">
           <Brand />
-          {/* No celular, o sino fica na barra superior */}
-          <div className="hidden md:block">
+          {/* No celular, o sino e o tema ficam na barra superior */}
+          <div className="hidden items-center gap-1 md:flex">
             <NotificationBell />
+            <ThemeToggle />
           </div>
           <button
             type="button"
             onClick={() => setMenuOpen(false)}
             aria-label="Fechar menu"
-            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+            className="rounded-lg p-2 text-fg-2 hover:bg-subtle md:hidden"
           >
             <X className="size-5" />
           </button>
@@ -113,7 +116,7 @@ export function AppLayout() {
               className={({ isActive }) =>
                 clsx(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
-                  isActive ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+                  isActive ? 'bg-accent-soft text-accent-fg' : 'text-fg-2 hover:bg-subtle hover:text-fg',
                 )
               }
             >
@@ -123,15 +126,15 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-slate-200 p-3">
+        <div className="border-t border-line p-3">
           <div className="px-3 py-2">
-            <p className="truncate text-sm font-medium text-slate-900">{user?.nome}</p>
-            <p className="truncate text-xs text-slate-500">{user?.email}</p>
+            <p className="truncate text-sm font-medium text-fg">{user?.nome}</p>
+            <p className="truncate text-xs text-fg-3">{user?.email}</p>
           </div>
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-fg-2 hover:bg-subtle hover:text-fg"
           >
             <LogOut className="size-4.5" />
             Sair

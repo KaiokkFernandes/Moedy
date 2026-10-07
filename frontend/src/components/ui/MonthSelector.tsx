@@ -14,11 +14,11 @@ interface MonthSelectorProps {
 /** Navegação mês a mês: ‹ outubro de 2026 › */
 export function MonthSelector({ mes, onChange, max }: MonthSelectorProps) {
   return (
-    <div className="flex items-center gap-1 rounded-xl bg-white p-1 ring-1 ring-slate-200">
+    <div className="flex items-center gap-1 rounded-xl bg-surface p-1 ring-1 ring-line">
       <IconButton label="Mês anterior" onClick={() => onChange(shiftMonth(mes, -1))}>
         <ChevronLeft className="size-4" />
       </IconButton>
-      <span aria-live="polite" className="min-w-36 text-center text-sm font-medium text-slate-900 first-letter:uppercase">
+      <span aria-live="polite" className="min-w-36 text-center text-sm font-medium text-fg first-letter:uppercase">
         {formatMonthLong(mes)}
       </span>
       <IconButton label="Próximo mês" disabled={max !== undefined && mes >= max} onClick={() => onChange(shiftMonth(mes, 1))}>

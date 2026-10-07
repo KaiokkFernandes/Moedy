@@ -108,3 +108,6 @@ export const CATEGORY_COLORS = [
   '#ec4899',
   '#64748b',
 ]
+
+/** Cor de dados usada quando um lançamento não tem categoria (não é cor de interface). */
+export const COR_SEM_CATEGORIA = '#94a3b8'

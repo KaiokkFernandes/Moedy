@@ -5,9 +5,9 @@ import type { BudgetStatus } from '@/types/budgets'
 
 /** Aparência de cada situação. A cor nunca vem sozinha: há sempre o rótulo e o ícone. */
 const STATUS: Record<BudgetStatus, { label: string; icon: LucideIcon; bar: string; track: string; pill: string }> = {
-  OK: { label: 'Dentro do limite', icon: CircleCheck, bar: 'bg-emerald-600', track: 'bg-emerald-100', pill: 'bg-emerald-50 text-emerald-800' },
-  ATENCAO: { label: 'Atenção', icon: TriangleAlert, bar: 'bg-amber-500', track: 'bg-amber-100', pill: 'bg-amber-50 text-amber-800' },
-  ESTOURADO: { label: 'Estourado', icon: CircleAlert, bar: 'bg-red-600', track: 'bg-red-100', pill: 'bg-red-50 text-red-800' },
+  OK: { label: 'Dentro do limite', icon: CircleCheck, bar: 'bg-accent', track: 'bg-accent-soft-strong', pill: 'bg-accent-soft text-success-strong' },
+  ATENCAO: { label: 'Atenção', icon: TriangleAlert, bar: 'bg-warning-bar', track: 'bg-warning-soft-strong', pill: 'bg-warning-soft text-warning-strong' },
+  ESTOURADO: { label: 'Estourado', icon: CircleAlert, bar: 'bg-danger', track: 'bg-danger-soft-strong', pill: 'bg-danger-soft text-danger-strong' },
 }
 
 /** Barra de progresso do orçamento: verde, amarela a partir de 80% e vermelha a partir de 100%. */

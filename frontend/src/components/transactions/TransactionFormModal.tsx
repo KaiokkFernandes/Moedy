@@ -128,16 +128,16 @@ function TransactionForm({
         </Select>
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-slate-700">
+      <label className="flex items-start gap-2 text-sm text-fg-2">
         <input
           type="checkbox"
           checked={ignorarNosRelatorios}
           onChange={(e) => setIgnorarNosRelatorios(e.target.checked)}
-          className="mt-0.5 size-4 rounded border-slate-300 accent-emerald-600"
+          className="mt-0.5 size-4 rounded border-line-strong accent-accent"
         />
         <span>
           Não contar nos relatórios
-          <span className="block text-xs text-slate-500">
+          <span className="block text-xs text-fg-3">
             Para transferências entre suas contas e pagamento de fatura do cartão. O saldo da conta continua contando.
           </span>
         </span>

@@ -19,7 +19,7 @@ function IgnoredBadge() {
   return (
     <span
       title="Não conta nos totais nem nos relatórios (transferência ou pagamento de fatura)"
-      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-slate-600"
+      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-subtle px-2 py-0.5 text-xs font-medium whitespace-nowrap text-fg-2"
     >
       <EyeOff className="size-3" aria-hidden />
       Fora dos relatórios
@@ -30,7 +30,7 @@ function IgnoredBadge() {
 function Amount({ transaction, className }: { transaction: Transaction; className?: string }) {
   const receita = transaction.tipo === 'RECEITA'
   return (
-    <span className={clsx('font-medium whitespace-nowrap tabular-nums', receita ? 'text-emerald-600' : 'text-red-600', className)}>
+    <span className={clsx('font-medium whitespace-nowrap tabular-nums', receita ? 'text-success' : 'text-danger-fg', className)}>
       {receita ? '+' : '−'} {formatCurrency(transaction.valor)}
     </span>
   )
@@ -63,10 +63,10 @@ export function TransactionList({
 }: TransactionListProps) {
   return (
     <>
-      <div className="hidden overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 md:block">
+      <div className="hidden overflow-x-auto rounded-2xl bg-surface ring-1 ring-line md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs font-medium tracking-wide text-slate-500 uppercase">
+            <tr className="border-b border-line text-left text-xs font-medium tracking-wide text-fg-3 uppercase">
               <th scope="col" className="px-4 py-3">Data</th>
               <th scope="col" className="px-4 py-3">Descrição</th>
               <th scope="col" className="px-4 py-3">Categoria</th>
@@ -77,13 +77,13 @@ export function TransactionList({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {transactions.map((transaction) => (
-              <tr key={transaction.id} className="hover:bg-slate-50">
-                <td className="px-4 py-2 whitespace-nowrap text-slate-600 tabular-nums">{formatDate(transaction.data)}</td>
+              <tr key={transaction.id} className="hover:bg-page">
+                <td className="px-4 py-2 whitespace-nowrap text-fg-2 tabular-nums">{formatDate(transaction.data)}</td>
                 <td className="max-w-72 px-4 py-2">
                   <div className="flex items-center gap-2">
-                    <span className="truncate font-medium text-slate-900" title={transaction.descricao}>
+                    <span className="truncate font-medium text-fg" title={transaction.descricao}>
                       {transaction.descricao}
                     </span>
                     {transaction.ignorarNosRelatorios && <IgnoredBadge />}
@@ -96,7 +96,7 @@ export function TransactionList({
                     onCategoryChanged={onCategoryChanged}
                   />
                 </td>
-                <td className="max-w-40 truncate px-4 py-2 text-slate-600">{transaction.account.nome}</td>
+                <td className="max-w-40 truncate px-4 py-2 text-fg-2">{transaction.account.nome}</td>
                 <td className="px-4 py-2 text-right">
                   <Amount transaction={transaction} />
                 </td>
@@ -111,12 +111,12 @@ export function TransactionList({
 
       <ul className="space-y-3 md:hidden">
         {transactions.map((transaction) => (
-          <li key={transaction.id} className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+          <li key={transaction.id} className="rounded-2xl bg-surface p-4 ring-1 ring-line">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-medium text-slate-900">{transaction.descricao}</p>
+                <p className="truncate font-medium text-fg">{transaction.descricao}</p>
                 {transaction.ignorarNosRelatorios && <IgnoredBadge />}
-                <p className="mt-0.5 truncate text-xs text-slate-500">
+                <p className="mt-0.5 truncate text-xs text-fg-3">
                   {formatDate(transaction.data)} · {transaction.account.nome}
                 </p>
               </div>

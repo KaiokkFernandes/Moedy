@@ -85,7 +85,7 @@ function CategoryForm({ category, defaultTipo = 'DESPESA', onClose }: Omit<Categ
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-slate-700">Cor</legend>
+        <legend className="mb-2 text-sm font-medium text-fg-2">Cor</legend>
         <div className="flex flex-wrap gap-2">
           {colors.map((option) => (
             <button
@@ -94,18 +94,18 @@ function CategoryForm({ category, defaultTipo = 'DESPESA', onClose }: Omit<Categ
               aria-label={`Cor ${option}`}
               aria-pressed={option === cor}
               onClick={() => setCor(option)}
-              className="flex size-8 items-center justify-center rounded-full text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
+              className="flex size-8 items-center justify-center rounded-full text-on-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               style={{ backgroundColor: option }}
             >
               {option === cor && <Check className="size-4" aria-hidden />}
             </button>
           ))}
         </div>
-        {errors.cor && <p className="mt-1 text-sm text-red-600">{errors.cor}</p>}
+        {errors.cor && <p className="mt-1 text-sm text-danger-fg">{errors.cor}</p>}
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-slate-700">Ícone</legend>
+        <legend className="mb-2 text-sm font-medium text-fg-2">Ícone</legend>
         <div className="grid grid-cols-8 gap-1">
           {Object.entries(CATEGORY_ICONS).map(([name, Icon]) => (
             <button
@@ -115,15 +115,15 @@ function CategoryForm({ category, defaultTipo = 'DESPESA', onClose }: Omit<Categ
               aria-pressed={name === icone}
               onClick={() => setIcone(name)}
               className={clsx(
-                'flex aspect-square items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500',
-                name === icone ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100',
+                'flex aspect-square items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+                name === icone ? 'bg-inverse text-inverse-fg' : 'text-fg-2 hover:bg-subtle',
               )}
             >
               <Icon className="size-4.5" aria-hidden />
             </button>
           ))}
         </div>
-        {errors.icone && <p className="mt-1 text-sm text-red-600">{errors.icone}</p>}
+        {errors.icone && <p className="mt-1 text-sm text-danger-fg">{errors.icone}</p>}
       </fieldset>
 
       <ModalActions>

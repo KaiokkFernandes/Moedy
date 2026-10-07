@@ -26,7 +26,7 @@ import { formatCurrency, formatMonthName, formatMonthShort, formatPercent, plura
 import { currentMonth, monthPeriod, shiftMonth } from '@/lib/periods'
 import type { CategoryTotal } from '@/types/reports'
 
-const seeAllClass = 'shrink-0 text-sm font-medium text-emerald-700 hover:underline'
+const seeAllClass = 'shrink-0 text-sm font-medium text-accent-fg hover:underline'
 
 export function Painel() {
   const navigate = useNavigate()
@@ -76,22 +76,22 @@ export function Painel() {
       />
 
       {accounts.data?.length === 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-white p-5 ring-1 ring-slate-200">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-surface p-5 ring-1 ring-line">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft-strong text-success">
             <Landmark className="size-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="font-medium text-slate-900">Comece cadastrando uma conta</p>
-            <p className="text-sm text-slate-500">Depois, lance transações ou importe o extrato do banco para ver seus números aqui.</p>
+            <p className="font-medium text-fg">Comece cadastrando uma conta</p>
+            <p className="text-sm text-fg-3">Depois, lance transações ou importe o extrato do banco para ver seus números aqui.</p>
           </div>
-          <Link to="/contas" className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700">
+          <Link to="/contas" className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-on-solid hover:bg-accent-hover">
             Ir para Contas
           </Link>
         </div>
       )}
 
       {semCategoria > 0 && (
-        <div role="status" className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-amber-50 px-5 py-3 text-sm text-amber-900">
+        <div role="status" className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-warning-soft px-5 py-3 text-sm text-warning-strong">
           <CircleAlert className="size-4 shrink-0" aria-hidden />
           <span>
             {semCategoria === 1
@@ -114,7 +114,7 @@ export function Painel() {
           <StatCard
             label={mes === atual ? 'Saldo total das contas' : 'Saldo das contas no fim do mês'}
             value={data?.saldoContas.fim}
-            valueClassName={data && data.saldoContas.fim < 0 ? 'text-red-600' : undefined}
+            valueClassName={data && data.saldoContas.fim < 0 ? 'text-danger-fg' : undefined}
           >
             {data && <Variation value={data.saldoContas.variacao} label="desde o início do mês" />}
           </StatCard>
@@ -124,7 +124,7 @@ export function Painel() {
           <StatCard label="Receitas do mês" value={data?.receitas}>
             {data && <Variation value={data.variacao.receitas} label={`vs ${mesAnterior}`} />}
           </StatCard>
-          <StatCard label="Saldo do mês" value={data?.saldo} valueClassName={data && data.saldo < 0 ? 'text-red-600' : undefined}>
+          <StatCard label="Saldo do mês" value={data?.saldo} valueClassName={data && data.saldo < 0 ? 'text-danger-fg' : undefined}>
             {data && <Variation value={data.variacao.saldo} label={`vs ${mesAnterior}`} />}
           </StatCard>
         </div>
@@ -213,7 +213,7 @@ export function Painel() {
               {budgets.data.orcamentos.slice(0, 3).map((budget) => (
                 <li key={budget.id}>
                   <div className="mb-1.5 flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium text-slate-900">{budget.categoria.nome}</span>
+                    <span className="truncate text-sm font-medium text-fg">{budget.categoria.nome}</span>
                     <BudgetStatusPill status={budget.status} />
                   </div>
                   <BudgetProgress
@@ -221,7 +221,7 @@ export function Painel() {
                     status={budget.status}
                     label={`Orçamento de ${budget.categoria.nome}`}
                   />
-                  <p className="mt-1.5 text-xs text-slate-500">
+                  <p className="mt-1.5 text-xs text-fg-3">
                     {formatCurrency(budget.gasto)} de {formatCurrency(budget.valorLimite)} ({formatPercent(budget.percentual)})
                   </p>
                 </li>

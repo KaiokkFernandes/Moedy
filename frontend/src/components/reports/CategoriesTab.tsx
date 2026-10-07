@@ -77,38 +77,38 @@ export function CategoriesTab({ filters }: { filters: ReturnType<typeof useRepor
         >
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-xs font-medium text-slate-500">
+              <tr className="border-b border-line text-left text-xs font-medium text-fg-3">
                 <th scope="col" className="py-2 font-medium">Categoria</th>
                 <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">Transações</th>
                 <th scope="col" className="px-2 py-2 text-right font-medium">%</th>
                 <th scope="col" className="py-2 text-right font-medium">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {categorias.map((item) => {
                 const selected = (item.categoryId ?? SEM_CATEGORIA) === categoria
                 return (
-                  <tr key={item.categoryId ?? SEM_CATEGORIA} className={clsx(selected ? 'bg-emerald-50' : 'hover:bg-slate-50')}>
+                  <tr key={item.categoryId ?? SEM_CATEGORIA} className={clsx(selected ? 'bg-accent-soft' : 'hover:bg-page')}>
                     <td className="py-1.5">
                       <button
                         type="button"
                         aria-pressed={selected}
                         onClick={() => select(item.categoryId)}
-                        className="flex w-full items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-slate-400"
+                        className="flex w-full items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-focus"
                       >
                         <CategoryIcon icone={item.icone} cor={item.cor} size="sm" />
-                        <span className="truncate font-medium text-slate-900">{item.nome}</span>
+                        <span className="truncate font-medium text-fg">{item.nome}</span>
                       </button>
                     </td>
-                    <td className="hidden px-2 py-1.5 text-right text-slate-600 tabular-nums sm:table-cell">{item.quantidade}</td>
-                    <td className="px-2 py-1.5 text-right text-slate-600 tabular-nums">{formatPercent(item.percentual)}</td>
-                    <td className="py-1.5 text-right font-medium text-slate-900 tabular-nums">{formatCurrency(item.total)}</td>
+                    <td className="hidden px-2 py-1.5 text-right text-fg-2 tabular-nums sm:table-cell">{item.quantidade}</td>
+                    <td className="px-2 py-1.5 text-right text-fg-2 tabular-nums">{formatPercent(item.percentual)}</td>
+                    <td className="py-1.5 text-right font-medium text-fg tabular-nums">{formatCurrency(item.total)}</td>
                   </tr>
                 )
               })}
             </tbody>
             <tfoot>
-              <tr className="border-t border-slate-200 font-medium text-slate-900">
+              <tr className="border-t border-line font-medium text-fg">
                 <td className="py-2">Total</td>
                 <td className="hidden px-2 py-2 text-right tabular-nums sm:table-cell">
                   {categorias.reduce((sum, item) => sum + item.quantidade, 0)}
@@ -143,7 +143,7 @@ export function CategoriesTab({ filters }: { filters: ReturnType<typeof useRepor
           {trend.data && <CategoryTrendChart {...trend.data} />}
           <Link
             to={`/transacoes?inicio=${values.inicio}&fim=${values.fim}&tipo=${tipo}&categoria=${categoria}${values.conta ? `&conta=${values.conta}` : ''}`}
-            className="mt-3 inline-block text-sm font-medium text-emerald-700 hover:underline"
+            className="mt-3 inline-block text-sm font-medium text-accent-fg hover:underline"
           >
             Ver as transações desta categoria no período
           </Link>

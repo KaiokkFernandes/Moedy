@@ -97,12 +97,12 @@ function RuleForm({ onClose, categories, rule, defaults, offerApply, onSaved }: 
       </Select>
 
       {offerApply && (
-        <label className="flex items-start gap-2 text-sm text-slate-700">
+        <label className="flex items-start gap-2 text-sm text-fg-2">
           <input
             type="checkbox"
             checked={applyNow}
             onChange={(e) => setApplyNow(e.target.checked)}
-            className="mt-0.5 size-4 rounded border-slate-300 accent-emerald-600"
+            className="mt-0.5 size-4 rounded border-line-strong accent-accent"
           />
           Aplicar agora às transações que estão sem categoria
         </label>

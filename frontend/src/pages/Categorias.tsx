@@ -63,10 +63,10 @@ export function Categorias() {
           {SECTIONS.map(({ tipo, title }) => {
             const items = categories.data.filter((category) => category.tipo === tipo)
             return (
-              <section key={tipo} aria-label={title} className="rounded-2xl bg-white ring-1 ring-slate-200">
-                <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-                  <h2 className="font-medium text-slate-900">
-                    {title} <span className="text-sm font-normal text-slate-500">({items.length})</span>
+              <section key={tipo} aria-label={title} className="rounded-2xl bg-surface ring-1 ring-line">
+                <div className="flex items-center justify-between border-b border-line px-5 py-3">
+                  <h2 className="font-medium text-fg">
+                    {title} <span className="text-sm font-normal text-fg-3">({items.length})</span>
                   </h2>
                   <Button variant="ghost" size="sm" onClick={() => setForm({ tipo })}>
                     <Plus className="size-4" aria-hidden />
@@ -74,16 +74,16 @@ export function Categorias() {
                   </Button>
                 </div>
                 {items.length === 0 ? (
-                  <p className="flex items-center gap-2 px-5 py-8 text-sm text-slate-500">
+                  <p className="flex items-center gap-2 px-5 py-8 text-sm text-fg-3">
                     <Tags className="size-4" aria-hidden />
                     Nenhuma categoria de {tipo === 'DESPESA' ? 'despesa' : 'receita'}.
                   </p>
                 ) : (
-                  <ul className="divide-y divide-slate-100">
+                  <ul className="divide-y divide-line">
                     {items.map((category) => (
                       <li key={category.id} className="flex items-center gap-3 px-5 py-2.5">
                         <CategoryIcon icone={category.icone} cor={category.cor} />
-                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-900">
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-fg">
                           {category.nome}
                         </span>
                         <div className="-mr-2 flex">
@@ -123,7 +123,7 @@ export function Categorias() {
         }
       >
         <p>
-          Excluir a categoria <strong className="text-slate-900">{deleting?.nome}</strong>?
+          Excluir a categoria <strong className="text-fg">{deleting?.nome}</strong>?
         </p>
         <p>As transações dela não são apagadas: ficam sem categoria.</p>
       </ConfirmDialog>

@@ -2,8 +2,27 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <!-- Aplica o tema antes do primeiro desenho, para não piscar claro no modo escuro.
+         Replica src/lib/theme.ts: escolha salva ou "sistema" por padrão. -->
+    <script>
+      (function () {
+        try {
+          var escolha = localStorage.getItem('financas:tema');
+          var sistema = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var escuro = escolha === 'escuro' || (escolha !== 'claro' && sistema);
+          var html = document.documentElement;
+          html.classList.toggle('dark', escuro);
+          html.style.colorScheme = escuro ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', escuro ? '#0f1115' : '#f8fafc');
+        } catch (erro) {
+          /* localStorage bloqueado: segue no tema claro */
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8fafc" />
     <title>Finanças</title>
   </head>
   <body>
