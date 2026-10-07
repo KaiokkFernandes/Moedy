@@ -40,5 +40,8 @@
     "prisma": {
       "built": true
     }
+  },
+  "resolutions": {
+    "shell-quote": "^1.11.0"
   }
 }
