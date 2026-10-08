@@ -8,7 +8,7 @@
     "backend"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "concurrently -n backend,frontend -c blue,magenta \"yarn workspace backend dev\" \"yarn workspace frontend dev\"",
@@ -17,7 +17,14 @@
     "build": "yarn workspace backend build && yarn workspace frontend build",
     "prisma:migrate": "yarn workspace backend prisma:migrate",
     "prisma:studio": "yarn workspace backend prisma:studio",
-    "seed": "yarn workspace backend seed"
+    "seed": "yarn workspace backend seed",
+    "typecheck": "yarn workspace backend typecheck && yarn workspace frontend typecheck",
+    "test": "yarn workspace backend test && yarn workspace frontend test",
+    "start": "yarn workspace backend start",
+    "migrate:deploy": "yarn workspace backend migrate:deploy",
+    "docker:dev": "docker compose up --build",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build",
+    "docker:down": "docker compose down && docker compose -f docker-compose.prod.yml down"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"
@@ -33,5 +40,8 @@
     "prisma": {
       "built": true
     }
+  },
+  "resolutions": {
+    "shell-quote": "^1.11.0"
   }
 }

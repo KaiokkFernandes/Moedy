@@ -7,8 +7,8 @@ App de finanças pessoais em monorepo (Yarn workspaces):
 
 ## Requisitos
 
-- Node.js **20+**
-- PostgreSQL 14+ (veja abaixo)
+- Node.js **22+** (a versão está no `.nvmrc`)
+- PostgreSQL 14+ (veja abaixo) — ou só o Docker, veja [Rodando com Docker](#rodando-com-docker)
 - Yarn (qualquer versão; o projeto fixa o **Yarn 4.18.1** em `.yarn/releases`)
 
 Se ainda não tiver o Yarn instalado:
@@ -86,13 +86,47 @@ Sobe frontend e backend juntos:
 | Frontend | http://localhost:5173              |
 | Backend  | http://localhost:3333/api/health   |
 
-O Vite faz proxy de `/api` para o backend, então o frontend chama apenas `/api/...`.
+O Vite faz proxy de `/api` para o backend, então em desenvolvimento o frontend chama apenas `/api/...`.
+Em produção o endereço do backend vem de `VITE_API_URL` (veja `frontend/.env.example`).
 
 Também é possível subir cada um separadamente:
 
 ```bash
 yarn dev:backend
 yarn dev:frontend
+```
+
+## Rodando com Docker
+
+Com o Docker Desktop instalado, não é preciso ter Node nem PostgreSQL na máquina:
+
+```bash
+cp .env.example .env    # uma vez; ajuste se quiser
+yarn docker:dev         # ou: docker compose up --build
+```
+
+Sobe o PostgreSQL, o backend e o frontend com recarga automática, e as migrations são aplicadas sozinhas.
+O app abre em http://localhost:5173. Para criar o usuário de teste: `docker compose exec backend yarn seed`.
+
+| Comando            | O que faz                                                                    |
+| ------------------ | ---------------------------------------------------------------------------- |
+| `yarn docker:dev`  | Ambiente de desenvolvimento (frontend em `:5173`, API em `:3333`, banco em `:5433`) |
+| `yarn docker:prod` | Imagens de **produção** na sua máquina, para testar antes de publicar (frontend em `:8080`) |
+| `yarn docker:down` | Para e remove os containers (os dados do banco ficam no volume)              |
+
+O `docker:prod` exige um `JWT_SECRET` de verdade no `.env`: em produção o backend recusa o valor de exemplo.
+Se as portas 3333 ou 5173 já estiverem em uso (por exemplo, com o `yarn dev` rodando), mude-as no `.env`.
+
+## Publicação
+
+O passo a passo para publicar (backend no Render, frontend na Vercel) está em [DEPLOY.md](DEPLOY.md).
+
+## Scripts úteis
+
+```bash
+yarn typecheck   # confere os tipos dos dois workspaces
+yarn test        # testes dos dois workspaces
+yarn build       # build de produção (backend em backend/dist, frontend em frontend/dist)
 ```
 
 ## Prisma
@@ -110,12 +144,22 @@ porta `5432`, usuário `moedy`, senha `moedy` e banco `moedy`.
 
 ## Variáveis de ambiente (backend/.env)
 
-| Variável       | Exemplo                            |
-| -------------- | ---------------------------------- |
-| `PORT`         | `3333`                             |
-| `DATABASE_URL` | `postgresql://moedy:moedy@localhost:5432/moedy?schema=public` |
-| `JWT_SECRET`   | `troque-este-segredo-em-producao`  |
-| `SEED_USER_NOME` / `SEED_USER_EMAIL` / `SEED_USER_SENHA` | usuário de teste do seed |
+O servidor confere as variáveis ao iniciar e não sobe se faltar alguma obrigatória.
+
+| Variável | Obrigatória | Descrição |
+| -------- | ----------- | --------- |
+| `NODE_ENV` | não | `development` (padrão), `production` ou `test` |
+| `PORT` | não | Porta do servidor (padrão `3333`) |
+| `DATABASE_URL` | **sim** | `postgresql://moedy:moedy@localhost:5432/moedy?schema=public` |
+| `JWT_SECRET` | **sim** | Segredo dos tokens, com 32+ caracteres (`openssl rand -base64 48`) |
+| `CORS_ORIGIN` | em produção | Endereços do frontend que podem chamar a API, separados por vírgula |
+| `REGISTRATION_ENABLED` | não | `false` desliga o cadastro de novos usuários (padrão `true`) |
+| `LOG_LEVEL` | não | Nível dos logs (`info` em produção, `debug` em desenvolvimento) |
+| `ANTHROPIC_API_KEY` | não | Liga a sugestão de categorias por IA |
+| `AI_MODEL` / `AI_TIMEOUT_MS` / `AI_MAX_TRANSACTIONS` | não | Ajustes da sugestão por IA |
+| `SEED_USER_NOME` / `SEED_USER_EMAIL` / `SEED_USER_SENHA` | só no seed | Usuário de teste do `yarn seed` |
+
+No frontend só existe `VITE_API_URL` (endereço do backend, usado no build de produção).
 
 ## Autenticação
 
@@ -126,7 +170,7 @@ porta `5432`, usuário `moedy`, senha `moedy` e banco `moedy`.
 | `GET /api/auth/me`        | usuário logado (header `Authorization: Bearer <token>`) |
 
 Erros seguem o formato `{ "error": "mensagem" }`: **400** validação (com `issues: [{ campo, mensagem }]`),
-**401** não autenticado, **409** email já cadastrado. Todo usuário novo recebe as categorias padrão.
+**401** não autenticado, **403** cadastro desativado, **409** email já cadastrado, **429** muitas tentativas. Todo usuário novo recebe as categorias padrão.
 
 ## API
 

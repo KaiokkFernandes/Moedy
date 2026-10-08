@@ -18,7 +18,7 @@ export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({ error: `Rota não encontrada: ${req.method} ${req.originalUrl}` });
 };
 
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof ZodError) {
     res.status(400).json({
       error: "Dados inválidos",
@@ -59,6 +59,8 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
-  console.error(err);
-  res.status(500).json({ error: "Erro interno do servidor" });
+  // O detalhe (mensagem e stack) vai só para o log; a resposta é genérica e traz o id da
+  // requisição, para o erro poder ser localizado no log
+  req.log.error({ err }, "Erro não tratado");
+  res.status(500).json({ error: "Erro interno do servidor", requestId: req.id });
 };

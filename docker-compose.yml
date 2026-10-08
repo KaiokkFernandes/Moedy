@@ -1,0 +1,89 @@
+# Ambiente de DESENVOLVIMENTO: PostgreSQL + backend + frontend, com hot reload.
+#   cp .env.example .env   (uma vez)
+#   yarn docker:dev        → http://localhost:5173
+# As variáveis vêm do .env da raiz (não versionado).
+name: moedy
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-moedy}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-moedy}
+      POSTGRES_DB: ${POSTGRES_DB:-moedy}
+    ports:
+      # 5433 por padrão, para não brigar com um PostgreSQL já instalado na máquina
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: deps
+    working_dir: /app/backend
+    # Aplica as migrações pendentes, gera o Prisma Client e sobe com recarga automática.
+    command: sh -c "yarn prisma migrate deploy && yarn prisma generate && yarn dev"
+    environment:
+      NODE_ENV: development
+      PORT: 3333
+      DATABASE_URL: postgresql://${POSTGRES_USER:-moedy}:${POSTGRES_PASSWORD:-moedy}@db:5432/${POSTGRES_DB:-moedy}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no arquivo .env (copie o .env.example)}
+      CORS_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      # Usuário de teste criado por: docker compose exec backend yarn seed
+      SEED_USER_NOME: ${SEED_USER_NOME:-Usuário Teste}
+      SEED_USER_EMAIL: ${SEED_USER_EMAIL:-teste@moedy.dev}
+      SEED_USER_SENHA: ${SEED_USER_SENHA:-teste12345}
+    ports:
+      - "${BACKEND_PORT:-3333}:3333"
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./backend/prisma:/app/backend/prisma
+      - ./backend/prisma.config.ts:/app/backend/prisma.config.ts
+      - ./backend/tsconfig.json:/app/backend/tsconfig.json
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3333/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: deps
+    working_dir: /app/frontend
+    command: yarn dev --host 0.0.0.0
+    environment:
+      # O Vite repassa /api para o container do backend
+      VITE_PROXY_TARGET: http://backend:3333
+      VITE_USE_POLLING: ${VITE_USE_POLLING:-false}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend/src:/app/frontend/src
+      - ./frontend/public:/app/frontend/public
+      - ./frontend/index.html:/app/frontend/index.html
+      - ./frontend/vite.config.ts:/app/frontend/vite.config.ts
+      - ./frontend/tsconfig.json:/app/frontend/tsconfig.json
+      - ./frontend/tsconfig.app.json:/app/frontend/tsconfig.app.json
+      - ./frontend/tsconfig.node.json:/app/frontend/tsconfig.node.json
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  db-data:

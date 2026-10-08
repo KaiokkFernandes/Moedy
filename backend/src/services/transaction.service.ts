@@ -1,4 +1,5 @@
 import type { Prisma, TransactionType } from "../generated/prisma/client.js";
+import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../middlewares/errorHandler.js";
 import { aiConfig } from "./ai/index.js";
@@ -148,7 +149,7 @@ async function rememberCategory(
   try {
     await remember(userId, [{ descricao: transaction.descricao, tipo: transaction.tipo, categoryId: transaction.categoryId }]);
   } catch (error) {
-    console.warn("[memoria-categorias] não foi possível gravar a escolha", error instanceof Error ? error.name : "");
+    logger.warn({ erro: error instanceof Error ? error.name : "desconhecido" }, "Memória de categorias: não foi possível gravar a escolha");
   }
 }
 

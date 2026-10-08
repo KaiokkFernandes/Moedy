@@ -2,6 +2,7 @@ import { parseCsv, readCsv, suggestMapping } from "../lib/import/csv.js";
 import { decodeFile } from "../lib/import/encoding.js";
 import { parseOfx } from "../lib/import/ofx.js";
 import { ImportFileError, type ParseResult } from "../lib/import/types.js";
+import { logger } from "../lib/logger.js";
 import { prisma } from "../lib/prisma.js";
 import { normalizeText } from "../lib/text.js";
 import { AppError } from "../middlewares/errorHandler.js";
@@ -199,7 +200,7 @@ export async function confirm(userId: string, { accountId, itens }: ConfirmInput
       itens.flatMap((item) => (item.categoryId ? [{ descricao: item.descricao, tipo: item.tipo, categoryId: item.categoryId }] : [])),
     );
   } catch (error) {
-    console.warn("[memoria-categorias] não foi possível gravar a memória da importação", error instanceof Error ? error.name : "");
+    logger.warn({ erro: error instanceof Error ? error.name : "desconhecido" }, "Memória de categorias: não foi possível gravar a importação");
   }
 
   return {

@@ -1,3 +1,4 @@
+import "./seedGuard.js";
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import type { AccountType } from "../src/generated/prisma/client.js";

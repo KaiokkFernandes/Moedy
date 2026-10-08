@@ -1,6 +1,8 @@
-import type { TransactionType } from "../generated/prisma/client.js";
+import { Prisma, type TransactionType } from "../generated/prisma/client.js";
 import { merchantKey } from "../lib/merchant.js";
 import { prisma } from "../lib/prisma.js";
+
+const UPSERT_BATCH = 500;
 
 export interface MemoryEntry {
   descricao: string;
@@ -35,14 +37,21 @@ export async function remember(userId: string, entries: MemoryEntry[]): Promise<
   }
   if (unique.size === 0) return 0;
 
-  await prisma.$transaction(
-    [...unique.values()].map(({ chave, tipo, categoryId }) =>
-      prisma.categoryMemory.upsert({
-        where: { userId_chave_tipo: { userId, chave, tipo } },
-        update: { categoryId },
-        create: { userId, chave, tipo, categoryId },
-      }),
-    ),
-  );
+  // Um único comando por lote, em vez de um upsert por descrição: uma importação grande pode
+  // trazer milhares de descrições diferentes
+  const rows = [...unique.values()];
+  for (let start = 0; start < rows.length; start += UPSERT_BATCH) {
+    const values = rows
+      .slice(start, start + UPSERT_BATCH)
+      .map(
+        ({ chave, tipo, categoryId }) =>
+          Prisma.sql`(gen_random_uuid(), ${userId}, ${chave}, ${tipo}::"TransactionType", ${categoryId}, now())`,
+      );
+    await prisma.$executeRaw`
+      INSERT INTO "CategoryMemory" ("id", "userId", "chave", "tipo", "categoryId", "updatedAt")
+      VALUES ${Prisma.join(values)}
+      ON CONFLICT ("userId", "chave", "tipo")
+      DO UPDATE SET "categoryId" = EXCLUDED."categoryId", "updatedAt" = EXCLUDED."updatedAt"`;
+  }
   return unique.size;
 }

@@ -8,8 +8,15 @@ export const tokenStorage = {
   clear: () => localStorage.removeItem(TOKEN_KEY),
 }
 
+/**
+ * Endereço do backend, definido no build por VITE_API_URL (ex.: https://minha-api.onrender.com).
+ * Vazio em desenvolvimento: as chamadas vão para /api na mesma origem, e o proxy do Vite as
+ * encaminha para o backend local.
+ */
+const API_URL = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
+
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_URL}/api`,
 })
 
 let onUnauthorized = () => {}
