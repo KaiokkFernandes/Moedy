@@ -23,6 +23,10 @@ const schema = z
     JWT_SECRET: z.string({ error: "obrigatória" }).min(32, "deve ter pelo menos 32 caracteres"),
     /** Origens autorizadas a chamar a API, separadas por vírgula. */
     CORS_ORIGIN: z.string().optional(),
+    /** Redis dos contadores de limite de requisições. Sem ele, os contadores ficam em memória. */
+    REDIS_URL: z.string().regex(/^rediss?:\/\/.+/, "deve ser uma URL do Redis (redis:// ou rediss://)").optional(),
+    /** Definida pela própria Vercel ("1") no build e na execução. */
+    VERCEL: z.string().optional(),
     /** Com `false`, o cadastro de novos usuários responde 403. */
     REGISTRATION_ENABLED: booleano.default(true),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).optional(),
@@ -36,6 +40,11 @@ const schema = z
     if (valores.NODE_ENV !== "production") return;
     if (!valores.CORS_ORIGIN?.trim()) {
       ctx.addIssue({ code: "custom", path: ["CORS_ORIGIN"], message: "obrigatória em produção (ex.: https://seu-app.vercel.app)" });
+    }
+    // Na Vercel cada requisição pode cair numa instância diferente: contadores em memória não
+    // seguram tentativas de login em sequência
+    if (valores.VERCEL && !valores.REDIS_URL) {
+      ctx.addIssue({ code: "custom", path: ["REDIS_URL"], message: "obrigatória na Vercel (ex.: rediss://default:senha@host.upstash.io:6379)" });
     }
     if (JWT_SECRETS_DE_EXEMPLO.includes(valores.JWT_SECRET)) {
       ctx.addIssue({ code: "custom", path: ["JWT_SECRET"], message: "é o valor de exemplo; gere um segredo próprio" });

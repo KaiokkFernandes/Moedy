@@ -1,11 +1,16 @@
 import type { Request } from "express";
 import { rateLimit } from "express-rate-limit";
 import { env } from "../config/env.js";
+import { redis } from "../lib/redis.js";
+import { RedisStore } from "./redisStore.js";
 
 /*
  * Limites por IP. Em produção o servidor fica atrás do proxy da hospedagem, então o IP real vem
- * de X-Forwarded-For (por isso o `trust proxy` no app). Os contadores ficam em memória: valem
- * para uma única instância e zeram quando o serviço reinicia.
+ * de X-Forwarded-For (por isso o `trust proxy` no app).
+ *
+ * Com REDIS_URL, os contadores ficam no Redis e valem para todas as instâncias (obrigatório na
+ * Vercel). Sem ele, ficam em memória: valem para uma única instância e zeram ao reiniciar.
+ * Se o Redis cair, as requisições passam (com aviso no log) em vez de a API inteira parar.
  *
  * Fora de produção os limites são 100 vezes maiores, para não atrapalhar o desenvolvimento e os
  * testes automatizados sem desligar o mecanismo.
@@ -14,6 +19,8 @@ const FATOR = env.NODE_ENV === "production" ? 1 : 100;
 const MINUTO = 60 * 1000;
 
 function limiter(options: {
+  /** Identifica o limite no Redis, para os contadores de um não se misturarem com os de outro. */
+  nome: string;
   windowMs: number;
   limit: number;
   mensagem: string;
@@ -26,9 +33,12 @@ function limiter(options: {
     limit: options.limit * FATOR,
     skipSuccessfulRequests: options.skipSuccessfulRequests,
     ...(options.porUsuario ? { keyGenerator: (req: Request) => `usuario:${req.userId}` } : {}),
+    ...(redis ? { store: new RedisStore(redis, `limite:${options.nome}:`) } : {}),
+    passOnStoreError: true,
     standardHeaders: "draft-8",
     legacyHeaders: false,
-    handler: (_req, res) => {
+    handler: (req, res) => {
+      req.log?.warn({ limite: options.nome }, "Limite de requisições atingido");
       res.status(429).json({ error: options.mensagem });
     },
   });
@@ -36,6 +46,7 @@ function limiter(options: {
 
 /** Login: 10 tentativas erradas a cada 15 minutos. Logins certos não contam. */
 export const loginLimiter = limiter({
+  nome: "login",
   windowMs: 15 * MINUTO,
   limit: 10,
   skipSuccessfulRequests: true,
@@ -44,6 +55,7 @@ export const loginLimiter = limiter({
 
 /** Cadastro: 5 por hora (todas as tentativas contam, para conter a criação de contas em massa). */
 export const registerLimiter = limiter({
+  nome: "cadastro",
   windowMs: 60 * MINUTO,
   limit: 5,
   mensagem: "Muitas tentativas de cadastro. Tente de novo mais tarde.",
@@ -54,6 +66,7 @@ export const registerLimiter = limiter({
  * 10 minutos por usuário. Protege a chave da API de uso abusivo por uma conta.
  */
 export const aiLimiter = limiter({
+  nome: "ia",
   windowMs: 10 * MINUTO,
   limit: 30,
   porUsuario: true,
@@ -66,6 +79,7 @@ export const aiLimiter = limiter({
  * e isso precisa caber. Serve para conter abuso e laços acidentais, não o uso normal.
  */
 export const generalLimiter = limiter({
+  nome: "geral",
   windowMs: MINUTO,
   limit: 600,
   mensagem: "Muitas requisições em pouco tempo. Aguarde um instante e tente de novo.",

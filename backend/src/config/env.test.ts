@@ -55,6 +55,17 @@ describe("variáveis de ambiente", () => {
     assert.match(erros, /JWT_SECRET: é o valor de exemplo/);
   });
 
+  it("na Vercel, produção exige REDIS_URL", () => {
+    assert.match(problemas({ ...base, NODE_ENV: "production", VERCEL: "1" }).join(), /REDIS_URL: obrigatória na Vercel/);
+    assert.equal(parseEnv({ ...base, NODE_ENV: "production", CORS_ORIGIN: "https://a.app", VERCEL: "1", REDIS_URL: "rediss://default:x@h.upstash.io:6379" }).REDIS_URL, "rediss://default:x@h.upstash.io:6379");
+    // Fora da Vercel (Docker, servidor próprio) os contadores em memória continuam valendo
+    assert.equal(parseEnv({ ...base, NODE_ENV: "production", CORS_ORIGIN: "https://a.app" }).REDIS_URL, undefined);
+  });
+
+  it("REDIS_URL que não é do Redis é recusada", () => {
+    assert.match(problemas({ ...base, REDIS_URL: "https://h.upstash.io" }).join(), /REDIS_URL: deve ser uma URL do Redis/);
+  });
+
   it("CORS_ORIGIN aceita lista separada por vírgula e tira a barra final", () => {
     const env = parseEnv({ ...base, NODE_ENV: "production", CORS_ORIGIN: "https://app.vercel.app/, http://localhost:5173" });
     assert.deepEqual(env.CORS_ORIGINS, ["https://app.vercel.app", "http://localhost:5173"]);
