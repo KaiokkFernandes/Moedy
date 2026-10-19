@@ -21,7 +21,10 @@ const schema = z
       .string({ error: "obrigatória (ex.: postgresql://usuario:senha@host:5432/banco)" })
       .regex(/^postgres(ql)?:\/\/.+/, "deve ser uma URL do PostgreSQL (postgresql://...)"),
     JWT_SECRET: z.string({ error: "obrigatória" }).min(32, "deve ter pelo menos 32 caracteres"),
-    /** Origens autorizadas a chamar a API, separadas por vírgula. */
+    /**
+     * Outras origens autorizadas a chamar a API, separadas por vírgula. O próprio domínio do app
+     * (frontend e API no mesmo endereço, como na Vercel) é sempre aceito.
+     */
     CORS_ORIGIN: z.string().optional(),
     /** Redis dos contadores de limite de requisições. Sem ele, os contadores ficam em memória. */
     REDIS_URL: z.string().regex(/^rediss?:\/\/.+/, "deve ser uma URL do Redis (redis:// ou rediss://)").optional(),
@@ -38,9 +41,6 @@ const schema = z
   })
   .superRefine((valores, ctx) => {
     if (valores.NODE_ENV !== "production") return;
-    if (!valores.CORS_ORIGIN?.trim()) {
-      ctx.addIssue({ code: "custom", path: ["CORS_ORIGIN"], message: "obrigatória em produção (ex.: https://seu-app.vercel.app)" });
-    }
     // Na Vercel cada requisição pode cair numa instância diferente: contadores em memória não
     // seguram tentativas de login em sequência
     if (valores.VERCEL && !valores.REDIS_URL) {
@@ -52,8 +52,8 @@ const schema = z
   })
   .transform(({ CORS_ORIGIN, ...valores }) => ({
     ...valores,
-    /** Em desenvolvimento, sem CORS_ORIGIN, vale o endereço do Vite. */
-    CORS_ORIGINS: (CORS_ORIGIN?.trim() || "http://localhost:5173")
+    /** Fora de produção, sem CORS_ORIGIN, vale o endereço do Vite. */
+    CORS_ORIGINS: (CORS_ORIGIN?.trim() || (valores.NODE_ENV === "production" ? "" : "http://localhost:5173"))
       .split(",")
       .map((origem) => origem.trim().replace(/\/$/, ""))
       .filter(Boolean),
