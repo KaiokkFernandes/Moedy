@@ -72,6 +72,9 @@ export class EnvError extends Error {
 export function parseEnv(source: Record<string, string | undefined>): Env {
   // Variável definida mas vazia (comum em painéis de hospedagem) conta como ausente
   const limpo = Object.fromEntries(Object.entries(source).filter(([, valor]) => valor !== undefined && valor !== ""));
+  // Na Vercel, sem NODE_ENV explícito, vale produção: o padrão "development" afrouxaria os
+  // limites e ligaria o log formatado, cuja dependência nem vai no pacote da função
+  if (limpo.VERCEL && !limpo.NODE_ENV) limpo.NODE_ENV = "production";
   const resultado = schema.safeParse(limpo);
   if (!resultado.success) {
     throw new EnvError(resultado.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`));
