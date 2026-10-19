@@ -6,6 +6,11 @@ set -e
 
 yarn build
 
+# A Vercel põe o conteúdo de dist/ na raiz da função, longe do backend/package.json. Sem um
+# package.json ali dizendo "type": "module", o Node carrega os arquivos como CommonJS e o
+# primeiro `import` derruba a função ("Cannot use import statement outside a module").
+echo '{ "type": "module" }' > dist/package.json
+
 if [ "$VERCEL_ENV" = "production" ]; then
   if [ -z "$DATABASE_URL_UNPOOLED" ] && [ -z "$DATABASE_URL" ]; then
     echo "" >&2
