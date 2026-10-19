@@ -25,4 +25,3 @@ backend/src/generated
 *.md
 backend/samples
 docker-compose*.yml
-render.yaml
