@@ -12,6 +12,9 @@ if [ "$VERCEL_ENV" = "production" ]; then
     echo "Faltam as variáveis do banco: DATABASE_URL (e, com o Neon, DATABASE_URL_UNPOOLED)." >&2
     echo "Cadastre-as em Settings > Environment Variables (ambiente Production) e faça Redeploy." >&2
     echo "Passo a passo: DEPLOY.md, seção \"Banco no Neon\"." >&2
+    # Só os NOMES (nunca os valores) das variáveis parecidas, para achar um nome trocado ou com prefixo
+    PARECIDAS=$(env | cut -d= -f1 | grep -iE "DATABASE|POSTGRES|^PG|NEON|STORAGE" | sort | tr '\n' ' ')
+    echo "Variáveis parecidas encontradas neste build: ${PARECIDAS:-nenhuma}" >&2
     exit 1
   fi
   echo "Aplicando migrações do banco..."
