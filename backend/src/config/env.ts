@@ -21,8 +21,15 @@ const schema = z
       .string({ error: "obrigatória (ex.: postgresql://usuario:senha@host:5432/banco)" })
       .regex(/^postgres(ql)?:\/\/.+/, "deve ser uma URL do PostgreSQL (postgresql://...)"),
     JWT_SECRET: z.string({ error: "obrigatória" }).min(32, "deve ter pelo menos 32 caracteres"),
-    /** Origens autorizadas a chamar a API, separadas por vírgula. */
+    /**
+     * Outras origens autorizadas a chamar a API, separadas por vírgula. O próprio domínio do app
+     * (frontend e API no mesmo endereço, como na Vercel) é sempre aceito.
+     */
     CORS_ORIGIN: z.string().optional(),
+    /** Redis dos contadores de limite de requisições. Sem ele, os contadores ficam em memória. */
+    REDIS_URL: z.string().regex(/^rediss?:\/\/.+/, "deve ser uma URL do Redis (redis:// ou rediss://)").optional(),
+    /** Definida pela própria Vercel ("1") no build e na execução. */
+    VERCEL: z.string().optional(),
     /** Com `false`, o cadastro de novos usuários responde 403. */
     REGISTRATION_ENABLED: booleano.default(true),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).optional(),
@@ -34,8 +41,10 @@ const schema = z
   })
   .superRefine((valores, ctx) => {
     if (valores.NODE_ENV !== "production") return;
-    if (!valores.CORS_ORIGIN?.trim()) {
-      ctx.addIssue({ code: "custom", path: ["CORS_ORIGIN"], message: "obrigatória em produção (ex.: https://seu-app.vercel.app)" });
+    // Na Vercel cada requisição pode cair numa instância diferente: contadores em memória não
+    // seguram tentativas de login em sequência
+    if (valores.VERCEL && !valores.REDIS_URL) {
+      ctx.addIssue({ code: "custom", path: ["REDIS_URL"], message: "obrigatória na Vercel (ex.: rediss://default:senha@host.upstash.io:6379)" });
     }
     if (JWT_SECRETS_DE_EXEMPLO.includes(valores.JWT_SECRET)) {
       ctx.addIssue({ code: "custom", path: ["JWT_SECRET"], message: "é o valor de exemplo; gere um segredo próprio" });
@@ -43,8 +52,8 @@ const schema = z
   })
   .transform(({ CORS_ORIGIN, ...valores }) => ({
     ...valores,
-    /** Em desenvolvimento, sem CORS_ORIGIN, vale o endereço do Vite. */
-    CORS_ORIGINS: (CORS_ORIGIN?.trim() || "http://localhost:5173")
+    /** Fora de produção, sem CORS_ORIGIN, vale o endereço do Vite. */
+    CORS_ORIGINS: (CORS_ORIGIN?.trim() || (valores.NODE_ENV === "production" ? "" : "http://localhost:5173"))
       .split(",")
       .map((origem) => origem.trim().replace(/\/$/, ""))
       .filter(Boolean),
@@ -63,6 +72,9 @@ export class EnvError extends Error {
 export function parseEnv(source: Record<string, string | undefined>): Env {
   // Variável definida mas vazia (comum em painéis de hospedagem) conta como ausente
   const limpo = Object.fromEntries(Object.entries(source).filter(([, valor]) => valor !== undefined && valor !== ""));
+  // Na Vercel, sem NODE_ENV explícito, vale produção: o padrão "development" afrouxaria os
+  // limites e ligaria o log formatado, cuja dependência nem vai no pacote da função
+  if (limpo.VERCEL && !limpo.NODE_ENV) limpo.NODE_ENV = "production";
   const resultado = schema.safeParse(limpo);
   if (!resultado.success) {
     throw new EnvError(resultado.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`));

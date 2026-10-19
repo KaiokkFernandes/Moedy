@@ -119,7 +119,8 @@ Se as portas 3333 ou 5173 já estiverem em uso (por exemplo, com o `yarn dev` ro
 
 ## Publicação
 
-O passo a passo para publicar (backend no Render, frontend na Vercel) está em [DEPLOY.md](DEPLOY.md).
+O passo a passo para publicar na Vercel (frontend e backend no mesmo projeto, banco no Neon e Redis no
+Upstash) está em [DEPLOY.md](DEPLOY.md).
 
 ## Scripts úteis
 
@@ -151,15 +152,18 @@ O servidor confere as variáveis ao iniciar e não sobe se faltar alguma obrigat
 | `NODE_ENV` | não | `development` (padrão), `production` ou `test` |
 | `PORT` | não | Porta do servidor (padrão `3333`) |
 | `DATABASE_URL` | **sim** | `postgresql://moedy:moedy@localhost:5432/moedy?schema=public` |
+| `DATABASE_URL_UNPOOLED` | não | URL direta do banco para as migrações, quando a `DATABASE_URL` passa por um pooler |
 | `JWT_SECRET` | **sim** | Segredo dos tokens, com 32+ caracteres (`openssl rand -base64 48`) |
-| `CORS_ORIGIN` | em produção | Endereços do frontend que podem chamar a API, separados por vírgula |
+| `CORS_ORIGIN` | não | Outros endereços que podem chamar a API, separados por vírgula (o próprio domínio é sempre aceito) |
+| `REDIS_URL` | na Vercel | Redis dos limites de tentativas de login, cadastro e IA (`rediss://...`) |
 | `REGISTRATION_ENABLED` | não | `false` desliga o cadastro de novos usuários (padrão `true`) |
 | `LOG_LEVEL` | não | Nível dos logs (`info` em produção, `debug` em desenvolvimento) |
 | `ANTHROPIC_API_KEY` | não | Liga a sugestão de categorias por IA |
 | `AI_MODEL` / `AI_TIMEOUT_MS` / `AI_MAX_TRANSACTIONS` | não | Ajustes da sugestão por IA |
 | `SEED_USER_NOME` / `SEED_USER_EMAIL` / `SEED_USER_SENHA` | só no seed | Usuário de teste do `yarn seed` |
 
-No frontend só existe `VITE_API_URL` (endereço do backend, usado no build de produção).
+No frontend só existe `VITE_API_URL`: o endereço do backend, quando ele fica em outro domínio. Na Vercel,
+com a API no mesmo endereço, fica vazia.
 
 ## Autenticação
 
@@ -271,7 +275,7 @@ Trocar a variável `AI_MODEL` muda o modelo sem mexer no código.
 
 A importação tem duas etapas, para o usuário revisar antes de gravar:
 
-1. `POST /api/import/preview` (multipart: `arquivo` + `accountId`; até 5 MB, só `.ofx` e `.csv`) lê o arquivo e
+1. `POST /api/import/preview` (multipart: `arquivo` + `accountId`; até 4 MB, só `.ofx` e `.csv`) lê o arquivo e
    devolve as transações encontradas, com a categoria sugerida pelas regras e a marca `duplicada` para o que já
    existe na conta. Nada é gravado.
 2. `POST /api/import/confirm` (`accountId` + lista revisada) grava tudo em uma transação do banco e ignora

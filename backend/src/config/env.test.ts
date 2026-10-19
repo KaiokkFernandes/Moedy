@@ -49,10 +49,31 @@ describe("variáveis de ambiente", () => {
     assert.match(problemas({ ...base, DATABASE_URL: "file:./dev.db" }).join(), /DATABASE_URL: deve ser uma URL do PostgreSQL/);
   });
 
-  it("produção exige CORS_ORIGIN e recusa o segredo de exemplo", () => {
+  it("produção recusa o segredo de exemplo", () => {
     const erros = problemas({ ...base, NODE_ENV: "production", JWT_SECRET: "troque-por-um-segredo-com-pelo-menos-32-caracteres" }).join();
-    assert.match(erros, /CORS_ORIGIN: obrigatória em produção/);
     assert.match(erros, /JWT_SECRET: é o valor de exemplo/);
+  });
+
+  it("produção sem CORS_ORIGIN aceita só o próprio domínio (lista vazia)", () => {
+    assert.deepEqual(parseEnv({ ...base, NODE_ENV: "production" }).CORS_ORIGINS, []);
+  });
+
+  it("na Vercel, produção exige REDIS_URL", () => {
+    assert.match(problemas({ ...base, NODE_ENV: "production", VERCEL: "1" }).join(), /REDIS_URL: obrigatória na Vercel/);
+    assert.equal(parseEnv({ ...base, NODE_ENV: "production", VERCEL: "1", REDIS_URL: "rediss://default:x@h.upstash.io:6379" }).REDIS_URL, "rediss://default:x@h.upstash.io:6379");
+    // Fora da Vercel (Docker, servidor próprio) os contadores em memória continuam valendo
+    assert.equal(parseEnv({ ...base, NODE_ENV: "production" }).REDIS_URL, undefined);
+  });
+
+  it("na Vercel, sem NODE_ENV, assume produção", () => {
+    const env = parseEnv({ ...base, VERCEL: "1", REDIS_URL: "rediss://default:x@h.upstash.io:6379" });
+    assert.equal(env.NODE_ENV, "production");
+    assert.equal(parseEnv({ ...base, VERCEL: "1", NODE_ENV: "development" }).NODE_ENV, "development");
+    assert.equal(parseEnv(base).NODE_ENV, "development");
+  });
+
+  it("REDIS_URL que não é do Redis é recusada", () => {
+    assert.match(problemas({ ...base, REDIS_URL: "https://h.upstash.io" }).join(), /REDIS_URL: deve ser uma URL do Redis/);
   });
 
   it("CORS_ORIGIN aceita lista separada por vírgula e tira a barra final", () => {

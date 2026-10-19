@@ -19,7 +19,7 @@ import { getErrorMessage } from '@/lib/api'
 import { pluralize } from '@/lib/format'
 import type { CsvMapping, CsvMappingStep, ImportItem, ImportResult, ImportReview as ImportReviewData } from '@/types/import'
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024
+const MAX_FILE_SIZE = 4 * 1024 * 1024
 
 type Step =
   | { name: 'arquivo' }
@@ -31,7 +31,7 @@ type Step =
 function validateFile(file: File) {
   if (!/\.(ofx|csv)$/i.test(file.name)) return 'Formato não suportado: escolha um arquivo .ofx ou .csv.'
   if (file.size === 0) return 'O arquivo está vazio.'
-  if (file.size > MAX_FILE_SIZE) return 'O arquivo deve ter no máximo 5 MB.'
+  if (file.size > MAX_FILE_SIZE) return 'O arquivo deve ter no máximo 4 MB.'
   return ''
 }
 

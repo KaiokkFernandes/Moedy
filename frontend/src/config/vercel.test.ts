@@ -3,12 +3,18 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-const raiz = new URL('../../', import.meta.url)
-const html = readFileSync(new URL('index.html', raiz), 'utf8')
-const vercel = JSON.parse(readFileSync(new URL('vercel.json', raiz), 'utf8')) as {
+const frontend = new URL('../../', import.meta.url)
+const html = readFileSync(new URL('index.html', frontend), 'utf8')
+// O vercel.json fica na raiz do repositório; as regras do site estão no serviço "frontend"
+const config = JSON.parse(readFileSync(new URL('../vercel.json', frontend), 'utf8')) as {
+  services: Record<string, ServicoVercel>
+  rewrites: { source: string; destination: { service: string } }[]
+}
+type ServicoVercel = {
   rewrites: { source: string; destination: string }[]
   headers: { source: string; headers: { key: string; value: string }[] }[]
 }
+const vercel = config.services.frontend
 
 function cabecalho(source: string, key: string) {
   return vercel.headers.find((h) => h.source === source)?.headers.find((h) => h.key === key)?.value
@@ -32,6 +38,16 @@ test('rotas internas caem no index.html, mas arquivos de /assets não', () => {
   assert.ok(padrao.test('/transacoes'))
   assert.ok(padrao.test('/relatorios/2026'))
   assert.ok(!padrao.test('/assets/index-abc123.js'))
+})
+
+test('/api vai para o backend e o resto para o frontend, nessa ordem', () => {
+  assert.deepEqual(
+    config.rewrites.map((regra) => [regra.source, regra.destination.service]),
+    [
+      ['/api/(.*)', 'backend'],
+      ['/(.*)', 'frontend'],
+    ],
+  )
 })
 
 test('arquivos com hash no nome têm cache longo', () => {

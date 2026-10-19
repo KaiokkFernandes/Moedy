@@ -1,18 +1,26 @@
 # Publicação
 
-Como colocar o app no ar: **backend no Render** (container Docker), **frontend na Vercel** e um banco
-**PostgreSQL**. Tudo cabe nos planos gratuitos.
+O app inteiro fica num **único projeto da Vercel**: o frontend em `/` e o backend em `/api`, no mesmo
+endereço e publicados juntos a cada push. Além da Vercel, são dois serviços externos, todos com plano
+gratuito:
 
-A ordem importa, porque cada parte precisa do endereço da anterior:
+| Serviço | Para quê |
+| ------- | -------- |
+| [Vercel](https://vercel.com) (plano Hobby) | Frontend e backend. O [`vercel.json`](vercel.json) da raiz descreve os dois (recurso _Services_) |
+| [Neon](https://neon.tech) | Banco PostgreSQL |
+| [Upstash](https://upstash.com) | Redis que guarda os contadores de tentativas de login, cadastro e IA |
 
-1. [Banco de dados](#1-banco-de-dados) → gera a `DATABASE_URL`
-2. [Backend no Render](#2-backend-no-render) → gera o endereço da API
-3. [Frontend na Vercel](#3-frontend-na-vercel) → gera o endereço do site
-4. [Ajustar o `CORS_ORIGIN`](#4-ajustar-o-cors_origin) no Render com o endereço final do site
-5. [Criar o primeiro usuário](#5-criar-o-primeiro-usuário) e desligar o cadastro
+Por que o Redis: na Vercel o backend roda em funções, e cada requisição pode cair numa instância
+diferente. Contadores em memória deixariam o limite de tentativas de login praticamente sem efeito.
 
-O Render e a Vercel publicam a partir do GitHub. Antes de começar, o código precisa estar na branch `main`
-do repositório.
+Ordem dos passos:
+
+1. [Banco no Neon](#1-banco-no-neon) → `DATABASE_URL` e `DATABASE_URL_UNPOOLED`
+2. [Redis no Upstash](#2-redis-no-upstash) → `REDIS_URL`
+3. [Projeto na Vercel](#3-projeto-na-vercel) com as variáveis
+4. [Criar o primeiro usuário](#4-criar-o-primeiro-usuário) e desligar o cadastro
+
+A Vercel publica a partir do GitHub: antes de começar, o código precisa estar na branch `main`.
 
 ## Antes de publicar
 
@@ -24,7 +32,8 @@ cp .env.example .env
 yarn docker:prod
 ```
 
-O site abre em http://localhost:8080 e a API em http://localhost:3333/api/health. Para encerrar: `yarn docker:down`.
+O site abre em http://localhost:8080. Para encerrar: `yarn docker:down`. Esse teste usa Docker e não a
+Vercel, mas é o mesmo código, com as mesmas regras de produção.
 
 ### Como gerar um JWT_SECRET forte
 
@@ -36,181 +45,153 @@ Use um valor diferente em cada ambiente e nunca o coloque em arquivo versionado.
 32 caracteres. Trocar o segredo desloga todo mundo (os tokens antigos deixam de valer), o que também serve
 como "sair de todos os dispositivos".
 
-## 1. Banco de dados
+## 1. Banco no Neon
 
-Qualquer PostgreSQL 14+ acessível pela internet serve. Duas opções gratuitas:
+Escolha **um** dos dois caminhos.
 
-| Opção | Observação |
-| ----- | ---------- |
-| [Neon](https://neon.tech) | Plano gratuito sem prazo de validade. **Recomendado.** |
-| Render PostgreSQL | No plano gratuito o banco **expira e é apagado** cerca de 30 dias após a criação. Só para testes. |
+**Pela Vercel (mais simples).** Depois de criar o projeto no passo 3, abra a aba **Storage** do projeto,
+clique em **Create Database**, escolha **Neon** e a região **US East (N. Virginia)**, a mesma das funções
+da Vercel. A integração cria o banco e já adiciona `DATABASE_URL` e `DATABASE_URL_UNPOOLED` às variáveis do
+projeto. Neste caso, faça o passo 3 primeiro e volte aqui.
 
-Os limites dos planos gratuitos mudam; confira a página de preços de cada um antes de escolher.
+**Direto no Neon.** Crie um projeto em [console.neon.tech](https://console.neon.tech), na região
+**AWS US East (N. Virginia)**. Em _Connect_, copie duas URLs:
 
-**Neon:** crie um projeto, de preferência na região **AWS US East (N. Virginia)**, a mesma do backend no
-Render. Em _Connection Details_, copie a _connection string_ **direta** (desmarque _Connection pooling_; o
-host não deve ter `-pooler`), porque as migrações precisam de conexão direta. Ela tem este formato:
+| Variável | Qual URL |
+| -------- | -------- |
+| `DATABASE_URL` | Com _Connection pooling_ ligado (o host tem `-pooler`). É a que o app usa |
+| `DATABASE_URL_UNPOOLED` | Com _Connection pooling_ desligado (conexão direta). É a que as migrações usam |
 
-```
-postgresql://usuario:senha@ep-xxxx.us-east-1.aws.neon.tech/neondb?sslmode=require
-```
+Não é preciso criar tabelas: as migrações são aplicadas sozinhas a cada deploy de produção.
 
-**Render PostgreSQL:** _New > Postgres_, na mesma região do serviço (Virginia). Use a **Internal Database URL**.
+## 2. Redis no Upstash
 
-Não é preciso criar tabelas: o backend aplica as migrações sozinho toda vez que inicia.
+1. Em [console.upstash.com](https://console.upstash.com), crie um banco **Redis** na região
+   **N. Virginia (us-east-1)**.
+2. Na página do banco, em _Connect_, copie a URL no formato `rediss://default:SENHA@HOST.upstash.io:6379`.
+   Essa é a `REDIS_URL`.
 
-## 2. Backend no Render
+Use a URL `rediss://` (conexão Redis normal), não a URL `https://` da API REST. Pelo mesmo motivo, crie o
+Redis direto no Upstash: a integração do Upstash pela aba Storage da Vercel cadastra só as variáveis da API
+REST, que o backend não usa.
 
-O arquivo [`render.yaml`](render.yaml) já descreve o serviço.
+O plano gratuito tem uma cota mensal de comandos. O app só fala com o Redis em login, cadastro e nas rotas
+de IA, então o uso pessoal fica muito abaixo dela.
 
-1. No [painel do Render](https://dashboard.render.com): **New > Blueprint** e escolha o repositório.
-2. O Render lê o `render.yaml` e pede os valores marcados como segredo:
+## 3. Projeto na Vercel
 
-   | Variável | Valor |
-   | -------- | ----- |
-   | `DATABASE_URL` | A URL do passo 1 |
-   | `JWT_SECRET` | O resultado de `openssl rand -base64 48` |
-   | `CORS_ORIGIN` | Ainda não existe. Coloque `https://moedy.vercel.app` (ou o nome que pretende usar) e corrija no passo 4 |
-   | `ANTHROPIC_API_KEY` | Opcional. Deixe vazio para manter a sugestão por IA desligada |
-
-3. Clique em **Apply**. O primeiro build leva alguns minutos.
-4. Quando terminar, abra `https://SEU-SERVICO.onrender.com/api/health`. A resposta esperada é `{"status":"ok"}`.
-   Anote esse endereço (sem o `/api/health`): é o `VITE_API_URL` do próximo passo.
-
-As demais variáveis já vêm preenchidas pelo blueprint: `NODE_ENV=production`, `REGISTRATION_ENABLED=true`,
-`AI_MODEL` e `LOG_LEVEL`. A porta (`PORT`) é definida pelo próprio Render.
-
-Se preferir criar o serviço à mão, em vez do blueprint: **New > Web Service**, linguagem **Docker**,
-_Dockerfile Path_ `./backend/Dockerfile`, _Docker Build Context Directory_ `.` (a raiz, não `backend`),
-_Health Check Path_ `/api/health`, e as mesmas variáveis.
-
-Se o deploy falhar, veja os logs do serviço. O backend avisa exatamente o que falta:
-
-```
-Variáveis de ambiente inválidas:
-  - JWT_SECRET: obrigatória
-```
-
-**Plano gratuito:** o serviço dorme depois de uns 15 minutos sem acessos, e a primeira requisição seguinte
-leva até um minuto. O app mostra "Conectando ao servidor…" enquanto isso.
-
-## 3. Frontend na Vercel
-
-1. Na [Vercel](https://vercel.com/new): **Add New > Project** e importe o repositório.
-2. Em **Root Directory**, escolha `frontend`. O resto (comando de instalação, build e pasta de saída) vem
-   do [`frontend/vercel.json`](frontend/vercel.json); não precisa alterar.
+1. Em [vercel.com/new](https://vercel.com/new), importe o repositório.
+2. Deixe **Root Directory** como `./` (a raiz) e **Application Preset** como **Services**. A Vercel mostra o
+   `frontend` (Vite, em `/`) e o `backend` (Express, em `/api`). **Não** use _Import single project_: o
+   `vercel.json` da raiz já junta os dois.
 3. Em **Environment Variables**, adicione:
 
    | Variável | Valor |
    | -------- | ----- |
-   | `VITE_API_URL` | O endereço do backend, **sem** `/api` e sem barra no final. Ex.: `https://moedy-api.onrender.com` |
+   | `DATABASE_URL` | URL com pooler do passo 1 (pule se for usar a integração do Neon) |
+   | `DATABASE_URL_UNPOOLED` | URL direta do passo 1 (idem) |
+   | `REDIS_URL` | URL `rediss://` do passo 2 |
+   | `JWT_SECRET` | O resultado de `openssl rand -base64 48` |
+   | `REGISTRATION_ENABLED` | `true` (até criar o seu usuário) |
+   | `ANTHROPIC_API_KEY` | Opcional: liga a sugestão de categorias por IA |
 
-4. Clique em **Deploy** e anote o endereço final do site (ex.: `https://moedy.vercel.app`).
+4. Clique em **Deploy**. O build instala e compila os dois serviços e, por ser o deploy de produção,
+   aplica as migrações no banco.
+5. Abra `https://SEU-PROJETO.vercel.app/api/health`. A resposta esperada é `{"status":"ok"}`.
 
-Dois cuidados:
+Não é preciso definir `NODE_ENV`, `PORT`, `CORS_ORIGIN` nem `VITE_API_URL`. Na Vercel o backend assume
+produção sozinho, a plataforma cuida da porta, e o frontend chama a API no mesmo endereço.
 
-- O `VITE_API_URL` é gravado no site durante o build. Se mudar a variável, faça um novo deploy
-  (_Deployments > ⋯ > Redeploy_) para valer.
-- A instalação usa o `yarn.lock` da raiz do repositório, então a opção _Include files outside of the Root
-  Directory_ (em _Settings > Build and Deployment > Root Directory_) precisa ficar ligada, que é o padrão.
-  Se a instalação reclamar da versão do Yarn, adicione a variável `ENABLE_EXPERIMENTAL_COREPACK=1` e
-  refaça o deploy.
-
-## 4. Ajustar o CORS_ORIGIN
-
-O backend só aceita chamadas vindas dos endereços listados em `CORS_ORIGIN`. Enquanto ele não for o endereço
-real do site, o login falha com "Origem não permitida".
-
-No Render: serviço **> Environment**, edite `CORS_ORIGIN` com o endereço exato do site e salve. O serviço
-reinicia sozinho.
+Se uma variável obrigatória faltar, a função do backend não sobe e o motivo aparece em
+**Logs** (ou na aba _Functions_ do deploy):
 
 ```
-https://moedy.vercel.app
+Variáveis de ambiente inválidas:
+  - REDIS_URL: obrigatória na Vercel (ex.: rediss://default:senha@host.upstash.io:6379)
 ```
 
-- Sem barra no final e com `https://`.
-- Para mais de um endereço (domínio próprio e o da Vercel), separe por vírgula:
-  `https://financas.meudominio.com,https://moedy.vercel.app`.
-- Os endereços de _preview_ da Vercel (um por branch ou pull request) não estão na lista e, por isso, não
-  conseguem fazer login. É o esperado.
+Depois de adicionar ou mudar uma variável, faça um novo deploy (_Deployments > ⋯ > Redeploy_) para valer.
 
-## 5. Criar o primeiro usuário
+**Primeiro acesso:** depois de um tempo sem uso, a primeira requisição leva alguns segundos enquanto a
+função inicia. O app mostra "Conectando ao servidor…" se passar de 4 segundos.
+
+## 4. Criar o primeiro usuário
 
 O seed (`yarn seed`) é só para desenvolvimento e se recusa a rodar em produção. Em produção, crie a conta
 pelo próprio site:
 
-1. Com `REGISTRATION_ENABLED=true` (o padrão do blueprint), abra o site, clique em **Criar conta** e cadastre-se.
-2. No Render, mude `REGISTRATION_ENABLED` para `false` e salve.
+1. Com `REGISTRATION_ENABLED=true`, abra o site, clique em **Criar conta** e cadastre-se.
+2. Na Vercel, mude `REGISTRATION_ENABLED` para `false` e faça **Redeploy**.
 
 A partir daí o cadastro responde 403 e o link some da tela de login, então ninguém mais cria conta (nem usa
 a sua chave da Anthropic). Para cadastrar outra pessoa no futuro, volte a variável para `true`, faça o
 cadastro e desligue de novo.
 
-## Variáveis de ambiente
-
-### Render (backend)
+## Variáveis de ambiente na Vercel
 
 | Variável | Obrigatória | Valor |
 | -------- | ----------- | ----- |
-| `NODE_ENV` | sim | `production` (blueprint) |
-| `DATABASE_URL` | **sim, segredo** | URL do PostgreSQL |
+| `DATABASE_URL` | **sim, segredo** | URL do Neon com pooler |
+| `DATABASE_URL_UNPOOLED` | recomendada, segredo | URL direta do Neon, para as migrações. Sem ela, as migrações usam a `DATABASE_URL` |
+| `REDIS_URL` | **sim, segredo** | URL `rediss://` do Upstash |
 | `JWT_SECRET` | **sim, segredo** | 32+ caracteres, de `openssl rand -base64 48` |
-| `CORS_ORIGIN` | **sim** | Endereço do site na Vercel; vários separados por vírgula |
 | `REGISTRATION_ENABLED` | não | `true` até criar seu usuário, depois `false` |
 | `ANTHROPIC_API_KEY` | não, segredo | Liga a sugestão de categorias por IA |
-| `AI_MODEL` | não | `claude-haiku-4-5-20251001` (blueprint) |
-| `LOG_LEVEL` | não | `info` (blueprint) |
-| `PORT` | — | Definida pelo Render; não preencha |
+| `AI_MODEL` | não | Padrão `claude-haiku-4-5-20251001` |
+| `LOG_LEVEL` | não | Padrão `info` |
+| `CORS_ORIGIN` | não | Só se outro site (outro domínio) precisar chamar a API |
 
-### Vercel (frontend)
+## Deploys de preview
 
-| Variável | Obrigatória | Valor |
-| -------- | ----------- | ----- |
-| `VITE_API_URL` | **sim** | Endereço do backend, sem `/api` e sem barra no final |
+A Vercel cria um deploy de preview para cada branch e pull request, com endereço próprio. Neles o build
+**não** aplica migrações, para um preview nunca alterar o banco de produção.
+
+Se as variáveis do banco também estiverem marcadas para o ambiente _Preview_, o preview usa o mesmo banco
+da produção, com os seus dados reais. Funciona enquanto a branch não trouxer migração nova; se trouxer, o
+preview vai falhar ao acessar as tabelas novas. Para previews isolados, marque as variáveis do banco só
+para _Production_ (os previews ficam sem API) ou use um banco separado para _Preview_; a integração do
+Neon oferece criar um banco por preview.
 
 ## Atualizações
 
-Cada push na `main` publica sozinho: a Vercel refaz o frontend e o Render refaz o backend quando algo em
-`backend/` muda. Migrações novas são aplicadas na partida do container, antes de o servidor aceitar
-requisições; se uma migração falhar, o deploy falha e a versão anterior continua no ar.
+Cada push na `main` publica sozinho. Migrações novas são aplicadas durante o build, antes de o código novo
+entrar no ar; se uma migração falhar, o deploy falha e a versão anterior continua servindo.
 
-O GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda typecheck, lint, testes, build
-e a construção da imagem Docker em cada pull request e em cada push na `main`. Ele só verifica; quem publica
-são o Render e a Vercel.
+O GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda typecheck, lint, testes,
+build e a construção da imagem Docker em cada pull request e em cada push na `main`. Ele só verifica; quem
+publica é a Vercel.
 
 ## Backup e restauração do banco
 
 É preciso ter o `pg_dump` e o `pg_restore` em versão igual ou mais nova que a do servidor
-(`brew install postgresql@18` no macOS). Use a URL de conexão **externa/direta** do banco.
+(`brew install postgresql@18` no macOS). Use a URL **direta** (`DATABASE_URL_UNPOOLED`).
 
 **Backup:**
 
 ```bash
-pg_dump "$DATABASE_URL" --format=custom --no-owner --no-acl --file="moedy-$(date +%F).dump"
+pg_dump "$DATABASE_URL_UNPOOLED" --format=custom --no-owner --no-acl --file="moedy-$(date +%F).dump"
 ```
 
 **Restauração** (substitui o que estiver no banco de destino):
 
 ```bash
-pg_restore --clean --if-exists --no-owner --no-acl --dbname="$DATABASE_URL" moedy-2026-10-07.dump
+pg_restore --clean --if-exists --no-owner --no-acl --dbname="$DATABASE_URL_UNPOOLED" moedy-2026-10-19.dump
 ```
 
 - Faça um backup antes de qualquer deploy que traga migração nova.
 - O arquivo contém todos os seus dados financeiros: guarde em lugar seguro e fora do repositório.
 - Para testar um backup sem tocar na produção, restaure no banco local do Docker
   (`postgresql://moedy:moedy@localhost:5433/moedy`, com o `yarn docker:dev` no ar).
-- O Neon também permite voltar o banco a um ponto no tempo pelo painel (_Restore_), dentro da janela do plano.
+- O Neon também permite voltar o banco a um ponto no tempo pelo painel (_Restore_), dentro da janela do
+  plano, que é curta no gratuito.
 
 ## Como reverter um deploy
 
-**Frontend (Vercel):** _Deployments_, abra o menu **⋯** do deploy anterior que funcionava e escolha
-**Instant Rollback** (ou _Promote to Production_). A troca é imediata.
+**Pela Vercel:** em _Deployments_, abra o menu **⋯** do deploy anterior que funcionava e escolha
+**Instant Rollback** (ou _Promote to Production_). A troca é imediata e vale para frontend e backend
+juntos. No plano Hobby, o rollback volta para o deploy de produção anterior.
 
-**Backend (Render):** na página do serviço, em _Events_ (ou _Deploys_), localize o deploy anterior e clique em
-**Rollback**. O Render desliga o deploy automático enquanto o rollback estiver ativo; religue em
-_Settings > Auto-Deploy_ depois de corrigir o problema.
-
-**Pelo Git (vale para os dois):** desfaça o commit com problema e envie. Um novo deploy sai sozinho.
+**Pelo Git:** desfaça o commit com problema e envie. Um novo deploy sai sozinho.
 
 ```bash
 git revert <hash-do-commit>
@@ -225,13 +206,23 @@ esquema.
 
 ## Limitações conhecidas
 
-- **Limite de requisições em memória.** Os contadores de tentativas de login e de uso geral ficam na memória
-  do processo: zeram a cada reinício e valem para uma única instância. É suficiente para um serviço só; com
-  mais de uma instância seria preciso um armazenamento compartilhado (Redis).
+- **Tamanho das requisições.** A Vercel aceita no máximo 4,5 MB por requisição e por resposta. O upload de
+  extrato é limitado a 4 MB. A exportação de CSV de um período muito longo (dezenas de milhares de
+  transações) pode passar do limite: nesse caso, exporte em períodos menores.
+- **Tempo por requisição.** No plano Hobby, cada requisição pode durar até 5 minutos. A sugestão por IA
+  desiste antes, com 20 segundos.
+- **Services está em beta.** O recurso da Vercel que junta frontend e backend num projeto ainda está em
+  beta. Se algo mudar, a alternativa é importar o `frontend` e o `backend` como dois projetos separados.
+  Nesse caso, defina `VITE_API_URL` no frontend com o endereço do backend, coloque o endereço do frontend em
+  `CORS_ORIGIN` no backend e libere esse endereço no `connect-src` da CSP no `vercel.json`.
+- **Plano Hobby é para uso pessoal.** Uso comercial exige o plano Pro.
+- **Limite geral de requisições por instância.** O limite geral (600 por minuto por IP) fica na memória de
+  cada instância, de propósito. Os limites que precisam ser exatos (login, cadastro e IA) ficam no Redis.
+- **Se o Redis cair**, as requisições passam sem limite (com aviso no log) em vez de a API parar.
 - **Vulnerabilidades em dependências do Prisma CLI.** O `yarn npm audit` aponta falhas em pacotes que o
-  `prisma` (linha de comando) traz consigo, como `mysql2` e `deepmerge-ts`. Eles não são usados pelo servidor
-  em execução: o CLI só roda `migrate deploy` na partida, contra o seu próprio PostgreSQL. A correção depende
-  de uma nova versão do Prisma; forçar versões por conta própria poderia quebrar o CLI. Reavalie ao atualizar
-  o Prisma.
+  `prisma` (linha de comando) traz consigo, como `mysql2` e `deepmerge-ts`. Eles não fazem parte do servidor
+  em execução: o CLI só roda `migrate deploy` durante o build, contra o seu próprio PostgreSQL. A correção
+  depende de uma nova versão do Prisma; forçar versões por conta própria poderia quebrar o CLI. Reavalie ao
+  atualizar o Prisma.
 - **Token no navegador.** O token de login fica no `localStorage`. A política de segurança de conteúdo (CSP)
   do `vercel.json` reduz o risco de um script de terceiros lê-lo, mas não o elimina.

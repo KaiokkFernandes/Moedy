@@ -10,7 +10,7 @@ import { routes } from "./routes/index.js";
 export function createApp() {
   const app = express();
 
-  // A hospedagem (Render) coloca um proxy na frente: confiar em um salto faz req.ip ser o IP do
+  // A hospedagem (Vercel) coloca um proxy na frente: confiar em um salto faz req.ip ser o IP do
   // cliente, que é a chave dos limites de requisição
   app.set("trust proxy", 1);
 

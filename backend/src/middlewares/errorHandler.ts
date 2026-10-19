@@ -36,7 +36,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof MulterError) {
     const message =
       err.code === "LIMIT_FILE_SIZE"
-        ? "O arquivo deve ter no máximo 5 MB"
+        ? "O arquivo deve ter no máximo 4 MB"
         : "Envie um único arquivo no campo \"arquivo\"";
     res.status(400).json({ error: message });
     return;

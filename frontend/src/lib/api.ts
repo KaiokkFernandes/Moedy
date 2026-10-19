@@ -9,9 +9,9 @@ export const tokenStorage = {
 }
 
 /**
- * Endereço do backend, definido no build por VITE_API_URL (ex.: https://minha-api.onrender.com).
- * Vazio em desenvolvimento: as chamadas vão para /api na mesma origem, e o proxy do Vite as
- * encaminha para o backend local.
+ * Endereço do backend, definido no build por VITE_API_URL, só quando ele fica em outro domínio.
+ * Vazio (padrão): as chamadas vão para /api na mesma origem. É o caso da Vercel, que serve a API
+ * no mesmo endereço, e do desenvolvimento, em que o proxy do Vite encaminha para o backend local.
  */
 const API_URL = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
 
