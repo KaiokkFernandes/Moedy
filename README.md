@@ -271,7 +271,7 @@ Trocar a variável `AI_MODEL` muda o modelo sem mexer no código.
 
 A importação tem duas etapas, para o usuário revisar antes de gravar:
 
-1. `POST /api/import/preview` (multipart: `arquivo` + `accountId`; até 5 MB, só `.ofx` e `.csv`) lê o arquivo e
+1. `POST /api/import/preview` (multipart: `arquivo` + `accountId`; até 4 MB, só `.ofx` e `.csv`) lê o arquivo e
    devolve as transações encontradas, com a categoria sugerida pelas regras e a marca `duplicada` para o que já
    existe na conta. Nada é gravado.
 2. `POST /api/import/confirm` (`accountId` + lista revisada) grava tudo em uma transação do banco e ignora

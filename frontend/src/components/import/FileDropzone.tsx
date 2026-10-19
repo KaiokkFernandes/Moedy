@@ -59,7 +59,7 @@ export function FileDropzone({ file, onSelect, error }: FileDropzoneProps) {
         <span className="mt-4 text-sm font-medium text-fg">
           Arraste o extrato aqui ou <span className="text-accent-fg underline">clique para escolher</span>
         </span>
-        <span className="mt-1 text-xs text-fg-3">Arquivos .ofx ou .csv, até 5 MB</span>
+        <span className="mt-1 text-xs text-fg-3">Arquivos .ofx ou .csv, até 4 MB</span>
       </label>
 
       {file && (
