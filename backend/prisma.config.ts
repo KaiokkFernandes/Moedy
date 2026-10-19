@@ -8,6 +8,8 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // As migrações precisam de conexão direta com o banco. Com um pooler na frente (Neon na
+    // Vercel), a URL direta vem em DATABASE_URL_UNPOOLED e o app usa a DATABASE_URL.
+    url: process.env["DATABASE_URL_UNPOOLED"] || process.env["DATABASE_URL"],
   },
 });
