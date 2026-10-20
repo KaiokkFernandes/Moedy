@@ -159,6 +159,7 @@ O servidor confere as variáveis ao iniciar e não sobe se faltar alguma obrigat
 | `REGISTRATION_ENABLED` | não | `false` desliga o cadastro de novos usuários (padrão `true`) |
 | `LOG_LEVEL` | não | Nível dos logs (`info` em produção, `debug` em desenvolvimento) |
 | `ANTHROPIC_API_KEY` | não | Liga a sugestão de categorias por IA |
+| `GOOGLE_CLIENT_ID` | não | Liga o login com Google (Client ID do OAuth; veja o DEPLOY.md) |
 | `AI_MODEL` / `AI_TIMEOUT_MS` / `AI_MAX_TRANSACTIONS` | não | Ajustes da sugestão por IA |
 | `SEED_USER_NOME` / `SEED_USER_EMAIL` / `SEED_USER_SENHA` | só no seed | Usuário de teste do `yarn seed` |
 
@@ -171,6 +172,8 @@ com a API no mesmo endereço, fica vazia.
 | ------------------------- | ------------------------------------------------------ |
 | `POST /api/auth/register` | `{ nome, email, senha }` (senha com 8+ caracteres) → `{ token, user }` |
 | `POST /api/auth/login`    | `{ email, senha }` → `{ token, user }`                 |
+| `POST /api/auth/google`   | `{ credential }` (token do botão do Google) → `{ token, user }`; entra, liga a uma conta com o mesmo email ou cria a conta |
+| `GET /api/auth/config`    | público: `{ registrationEnabled, googleClientId }`     |
 | `GET /api/auth/me`        | usuário logado (header `Authorization: Bearer <token>`) |
 
 Erros seguem o formato `{ "error": "mensagem" }`: **400** validação (com `issues: [{ campo, mensagem }]`),
