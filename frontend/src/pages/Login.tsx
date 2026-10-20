@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
 import { ConectandoAviso } from '@/components/ConectandoAviso'
 import { FormAlert } from '@/components/FormAlert'
+import { GoogleButton } from '@/components/GoogleButton'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
@@ -57,28 +58,31 @@ export function Login() {
         ) : null
       }
     >
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <FormAlert message={formError} />
-        <Input
-          label="Email"
-          type="email"
-          autoComplete="email"
-          placeholder="voce@exemplo.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={errors.email}
-        />
-        <Input
-          label="Senha"
-          type="password"
-          autoComplete="current-password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          error={errors.senha}
-        />
-        <Button type="submit" fullWidth loading={loading}>Entrar</Button>
-        {demorando && <ConectandoAviso />}
-      </form>
+      <div className="space-y-4">
+        <GoogleButton texto="signin_with" onErro={setFormError} onCarregando={setLoading} />
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <FormAlert message={formError} />
+          <Input
+            label="Email"
+            type="email"
+            autoComplete="email"
+            placeholder="voce@exemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={errors.email}
+          />
+          <Input
+            label="Senha"
+            type="password"
+            autoComplete="current-password"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            error={errors.senha}
+          />
+          <Button type="submit" fullWidth loading={loading}>Entrar</Button>
+          {demorando && <ConectandoAviso />}
+        </form>
+      </div>
     </AuthLayout>
   )
 }

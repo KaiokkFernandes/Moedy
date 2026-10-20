@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { AuthLayout } from '@/components/AuthLayout'
 import { ConectandoAviso } from '@/components/ConectandoAviso'
 import { FormAlert } from '@/components/FormAlert'
+import { GoogleButton } from '@/components/GoogleButton'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/hooks/useAuth'
@@ -76,44 +77,47 @@ export function Register() {
         </>
       }
     >
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <FormAlert message={formError} />
-        <Input
-          label="Nome"
-          autoComplete="name"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          error={errors.nome}
-        />
-        <Input
-          label="Email"
-          type="email"
-          autoComplete="email"
-          placeholder="voce@exemplo.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={errors.email}
-        />
-        <Input
-          label="Senha"
-          type="password"
-          autoComplete="new-password"
-          placeholder={`Mínimo de ${SENHA_MIN} caracteres`}
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          error={errors.senha}
-        />
-        <Input
-          label="Confirmar senha"
-          type="password"
-          autoComplete="new-password"
-          value={confirmacao}
-          onChange={(e) => setConfirmacao(e.target.value)}
-          error={errors.confirmacao}
-        />
-        <Button type="submit" fullWidth loading={loading}>Criar conta</Button>
-        {demorando && <ConectandoAviso />}
-      </form>
+      <div className="space-y-4">
+        <GoogleButton texto="signup_with" onErro={setFormError} onCarregando={setLoading} />
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <FormAlert message={formError} />
+          <Input
+            label="Nome"
+            autoComplete="name"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            error={errors.nome}
+          />
+          <Input
+            label="Email"
+            type="email"
+            autoComplete="email"
+            placeholder="voce@exemplo.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={errors.email}
+          />
+          <Input
+            label="Senha"
+            type="password"
+            autoComplete="new-password"
+            placeholder={`Mínimo de ${SENHA_MIN} caracteres`}
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            error={errors.senha}
+          />
+          <Input
+            label="Confirmar senha"
+            type="password"
+            autoComplete="new-password"
+            value={confirmacao}
+            onChange={(e) => setConfirmacao(e.target.value)}
+            error={errors.confirmacao}
+          />
+          <Button type="submit" fullWidth loading={loading}>Criar conta</Button>
+          {demorando && <ConectandoAviso />}
+        </form>
+      </div>
     </AuthLayout>
   )
 }

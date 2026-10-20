@@ -6,6 +6,14 @@ import * as authService from '@/services/auth'
  * servidor fora do ar), vale `true`: o próprio servidor recusa o cadastro quando está desligado.
  */
 export function useRegistrationEnabled() {
-  const config = useQuery({ queryKey: ['auth-config'], queryFn: authService.config, staleTime: 5 * 60 * 1000, retry: false })
-  return config.data?.registrationEnabled ?? true
+  return useAuthConfig().data?.registrationEnabled ?? true
+}
+
+/** Client ID do Google, ou null quando o login com Google não está configurado (ou ainda carregando). */
+export function useGoogleClientId() {
+  return useAuthConfig().data?.googleClientId ?? null
+}
+
+function useAuthConfig() {
+  return useQuery({ queryKey: ['auth-config'], queryFn: authService.config, staleTime: 5 * 60 * 1000, retry: false })
 }
