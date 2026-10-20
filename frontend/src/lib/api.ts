@@ -56,7 +56,12 @@ interface ApiErrorBody {
 export function getErrorMessage(error: unknown, fallback = 'Algo deu errado. Tente novamente.') {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
     if (!error.response) return 'Não foi possível conectar ao servidor.'
-    return error.response.data?.error ?? fallback
+    // Só usa a mensagem quando ela é texto: erros da hospedagem (ex.: a função da Vercel caiu)
+    // chegam em outro formato e quebrariam a tela se fossem renderizados
+    const mensagem: unknown = error.response.data?.error
+    if (typeof mensagem === 'string' && mensagem.trim()) return mensagem
+    if (error.response.status >= 500) return 'O servidor está com problemas no momento. Tente novamente em instantes.'
+    return fallback
   }
   return fallback
 }
