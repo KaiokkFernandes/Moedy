@@ -47,7 +47,10 @@ model User {
   id        String   @id @default(uuid())
   nome      String
   email     String   @unique
-  senha     String
+  // Nula em contas criadas pelo login com Google, que entram sem senha
+  senha     String?
+  // Identificador da conta Google (claim "sub" do token), quando o usuário já entrou com Google
+  googleId  String?  @unique
   createdAt DateTime @default(now())
 
   accounts      Account[]

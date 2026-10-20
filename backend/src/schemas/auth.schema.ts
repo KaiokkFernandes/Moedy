@@ -24,5 +24,10 @@ export const loginSchema = z.object({
   senha: z.string({ error: "Informe a senha" }).min(1, "Informe a senha"),
 });
 
+export const googleLoginSchema = z.object({
+  /** ID token entregue pelo botão do Google. */
+  credential: z.string({ error: "Informe o token do Google" }).min(1, "Informe o token do Google").max(4096, "Token inválido"),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

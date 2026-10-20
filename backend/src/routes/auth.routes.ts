@@ -9,4 +9,6 @@ export const authRoutes = Router();
 authRoutes.get("/config", authController.config);
 authRoutes.post("/register", registerLimiter, authController.requireRegistrationEnabled, authController.register);
 authRoutes.post("/login", loginLimiter, authController.login);
+// Só tentativas que falham contam para o limite, como no login com senha
+authRoutes.post("/google", loginLimiter, authController.google);
 authRoutes.get("/me", authenticate, authController.me);
