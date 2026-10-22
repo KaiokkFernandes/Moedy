@@ -2,6 +2,14 @@
 
 Toda mudança entra na `main` por pull request, e o pull request só pode ser mergeado com o CI verde.
 
+## Regras
+
+- **Nunca commitar direto na `main`.** Todo trabalho começa numa branch nova a partir da `main` atualizada
+  e chega por pull request.
+- **Toda feature ou correção vem com testes.** A lógica nova ganha testes unitários no mesmo pull request
+  (arquivo `.test.ts` ao lado do código). Correção de bug vem com o teste que reproduz o bug.
+- **O CI verde é obrigatório.** Lint sem avisos, typecheck, testes com a cobertura mínima e build.
+
 ## O dia a dia
 
 1. Crie uma branch a partir da `main` atualizada:
