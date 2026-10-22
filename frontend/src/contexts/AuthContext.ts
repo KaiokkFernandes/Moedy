@@ -7,6 +7,8 @@ export interface AuthContextValue {
   loading: boolean
   login: (data: LoginData) => Promise<void>
   register: (data: RegisterData) => Promise<void>
+  /** Entra (ou cria a conta) com o token entregue pelo botão do Google. */
+  loginWithGoogle: (credential: string) => Promise<void>
   logout: () => void
 }
 

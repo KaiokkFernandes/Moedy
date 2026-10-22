@@ -31,6 +31,16 @@ test('a CSP libera exatamente o script de tema embutido no index.html', () => {
   assert.ok(!/script-src[^;]*'unsafe-inline'/.test(csp))
 })
 
+test('a CSP libera o login com Google só nos endereços do Google Identity', () => {
+  const csp = cabecalho('/(.*)', 'Content-Security-Policy') ?? ''
+  const diretiva = (nome: string) => csp.split(';').map((parte) => parte.trim()).find((parte) => parte.startsWith(`${nome} `)) ?? ''
+  assert.match(diretiva('script-src'), / https:\/\/accounts\.google\.com\/gsi\/client( |$)/)
+  assert.match(diretiva('frame-src'), / https:\/\/accounts\.google\.com\/gsi\/( |$)/)
+  assert.match(diretiva('connect-src'), / https:\/\/accounts\.google\.com\/gsi\/( |$)/)
+  // Nada de liberar o domínio inteiro do Google para scripts
+  assert.doesNotMatch(diretiva('script-src'), /https:\/\/accounts\.google\.com(\/)?( |$)/)
+})
+
 test('rotas internas caem no index.html, mas arquivos de /assets não', () => {
   const [regra] = vercel.rewrites
   assert.equal(regra.destination, '/index.html')

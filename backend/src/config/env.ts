@@ -33,6 +33,12 @@ const schema = z
     /** Com `false`, o cadastro de novos usuários responde 403. */
     REGISTRATION_ENABLED: booleano.default(true),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).optional(),
+    /** Client ID do OAuth do Google (opcional). Sem ele, o botão "Entrar com o Google" não aparece. */
+    GOOGLE_CLIENT_ID: z
+      .string()
+      .trim()
+      .regex(/^[\w-]+\.apps\.googleusercontent\.com$/, "deve ser um Client ID do Google (termina em .apps.googleusercontent.com)")
+      .optional(),
     // Sugestão de categorias por IA (opcional)
     ANTHROPIC_API_KEY: z.string().optional(),
     AI_MODEL: z.string().optional(),

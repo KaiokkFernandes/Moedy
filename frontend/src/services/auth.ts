@@ -13,7 +13,14 @@ export async function me() {
   return (await api.get<{ user: User }>('/auth/me')).data.user
 }
 
-/** Configuração pública da autenticação (se o cadastro de novos usuários está aberto). */
+export async function google(credential: string) {
+  return (await api.post<AuthResponse>('/auth/google', { credential })).data
+}
+
+/**
+ * Configuração pública da autenticação: se o cadastro de novos usuários está aberto e o Client ID
+ * do Google (null quando o login com Google não está configurado no servidor).
+ */
 export async function config() {
-  return (await api.get<{ registrationEnabled: boolean }>('/auth/config')).data
+  return (await api.get<{ registrationEnabled: boolean; googleClientId: string | null }>('/auth/config')).data
 }

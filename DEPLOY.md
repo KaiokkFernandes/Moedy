@@ -115,6 +115,52 @@ Depois de adicionar ou mudar uma variável, faça um novo deploy (_Deployments >
 **Primeiro acesso:** depois de um tempo sem uso, a primeira requisição leva alguns segundos enquanto a
 função inicia. O app mostra "Conectando ao servidor…" se passar de 4 segundos.
 
+## Login com Google (opcional)
+
+Com a variável `GOOGLE_CLIENT_ID`, as telas de login e de cadastro ganham o botão **Fazer login com o
+Google**. Sem ela, o app funciona como antes, só com email e senha.
+
+**1. Criar o Client ID** no [Google Cloud Console](https://console.cloud.google.com):
+
+1. Crie um projeto (ex.: `Moedy`) ou use um existente.
+2. Abra **Google Auth Platform** (ou _APIs e serviços > Tela de consentimento OAuth_) e configure:
+   - **Branding:** nome do app (`Moedy`), seu email de suporte e o domínio do site.
+   - **Público (Audience):** tipo **Externo**. Enquanto o app estiver em **Teste**, só os emails
+     cadastrados como _usuários de teste_ conseguem entrar. Para liberar qualquer conta Google, clique
+     em **Publicar app**. Como o app só pede nome, email e foto (escopos básicos), o Google não exige
+     verificação.
+3. Em **Clientes** (ou _Credenciais > Criar credenciais > ID do cliente OAuth_), crie um cliente do tipo
+   **Aplicativo da Web** e, em **Origens JavaScript autorizadas**, adicione:
+
+   | Origem | Para quê |
+   | ------ | -------- |
+   | `https://SEU-PROJETO.vercel.app` | Produção (e o seu domínio próprio, se tiver) |
+   | `http://localhost:5173` e `http://localhost` | Desenvolvimento (`yarn dev` ou `yarn docker:dev`) |
+   | `http://localhost:8080` | Imagens de produção locais (`yarn docker:prod`) |
+
+   Não é preciso preencher **URIs de redirecionamento**: o login abre numa janela do próprio Google.
+4. Copie o **ID do cliente** (termina em `.apps.googleusercontent.com`). Ele não é segredo: vai no
+   navegador de qualquer forma.
+
+**2. Configurar:**
+
+- **Vercel:** adicione `GOOGLE_CLIENT_ID` em _Settings > Environment Variables_ e faça **Redeploy**.
+- **Desenvolvimento:** no `backend/.env` (com `yarn dev`) ou no `.env` da raiz (com Docker).
+
+Como as contas se ligam:
+
+- Se já existe uma conta com o mesmo email, o login com Google entra nela, e o email e a senha
+  continuam valendo.
+- Se não existe, cria uma conta nova sem senha (que entra só pelo Google), desde que o cadastro esteja
+  aberto. Com `REGISTRATION_ENABLED=false`, só quem já tem conta entra com o Google.
+
+Os deploys de _preview_ têm endereço próprio, que não está nas origens autorizadas: neles o botão do
+Google não funciona, e o login com email e senha continua normal.
+
+Se o clique no botão mostrar um erro do Google como `origin_mismatch` ou "acesso bloqueado", o endereço do
+site não está nas **Origens JavaScript autorizadas** (confira `https://` e a ausência de barra no final),
+ou o app ainda está em modo de teste e o seu email não é usuário de teste.
+
 ## 4. Criar o primeiro usuário
 
 O seed (`yarn seed`) é só para desenvolvimento e se recusa a rodar em produção. Em produção, crie a conta
@@ -137,6 +183,7 @@ cadastro e desligue de novo.
 | `JWT_SECRET` | **sim, segredo** | 32+ caracteres, de `openssl rand -base64 48` |
 | `REGISTRATION_ENABLED` | não | `true` até criar seu usuário, depois `false` |
 | `ANTHROPIC_API_KEY` | não, segredo | Liga a sugestão de categorias por IA |
+| `GOOGLE_CLIENT_ID` | não | Liga o login com Google (veja "Login com Google") |
 | `AI_MODEL` | não | Padrão `claude-haiku-4-5-20251001` |
 | `LOG_LEVEL` | não | Padrão `info` |
 | `CORS_ORIGIN` | não | Só se outro site (outro domínio) precisar chamar a API |

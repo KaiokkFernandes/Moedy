@@ -32,6 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [startSession],
   )
 
+  const loginWithGoogle = useCallback(
+    async (credential: string) => startSession(await authService.google(credential)),
+    [startSession],
+  )
+
   useEffect(() => {
     setUnauthorizedHandler(logout)
     return () => setUnauthorizedHandler(() => {})
@@ -59,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, register, loginWithGoogle, logout }),
+    [user, loading, login, register, loginWithGoogle, logout],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

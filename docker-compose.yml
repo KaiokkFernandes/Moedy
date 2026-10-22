@@ -39,6 +39,7 @@ services:
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       # Usuário de teste criado por: docker compose exec backend yarn seed
       SEED_USER_NOME: ${SEED_USER_NOME:-Usuário Teste}
       SEED_USER_EMAIL: ${SEED_USER_EMAIL:-teste@moedy.dev}
