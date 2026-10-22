@@ -204,9 +204,10 @@ Neon oferece criar um banco por preview.
 Cada push na `main` publica sozinho. Migrações novas são aplicadas durante o build, antes de o código novo
 entrar no ar; se uma migração falhar, o deploy falha e a versão anterior continua servindo.
 
-O GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda typecheck, lint, testes,
-build e a construção da imagem Docker em cada pull request e em cada push na `main`. Ele só verifica; quem
-publica é a Vercel.
+O GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) roda lint, typecheck, testes com
+cobertura mínima, build e a construção da imagem Docker em cada pull request e em cada push na `main`. Ele
+só verifica; quem publica é a Vercel. Com a `main` protegida (veja o [CONTRIBUTING.md](CONTRIBUTING.md)),
+nada chega à produção sem o CI verde.
 
 ## Backup e restauração do banco
 
