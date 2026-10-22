@@ -59,8 +59,9 @@ export function parseCentavos(input: string, { thousands = true }: ParseOptions 
   const integerPart = decimalIndex >= 0 ? text.slice(0, decimalIndex) : text;
   const decimalPart = decimalIndex >= 0 ? text.slice(decimalIndex + 1) : "";
 
-  // A parte inteira só pode ter dígitos, ou grupos de milhar bem formados com um único tipo de separador
-  if (!/^\d*$/.test(integerPart) && !/^\d{1,3}(\.\d{3})+$/.test(integerPart) && !/^\d{1,3}(,\d{3})+$/.test(integerPart)) {
+  // A parte inteira só pode ter dígitos, ou grupos de milhar bem formados com um único tipo de separador.
+  // O primeiro grupo nunca é zero: "0,005" não é "5 mil", é um valor com casas demais
+  if (!/^\d*$/.test(integerPart) && !/^[1-9]\d{0,2}(\.\d{3})+$/.test(integerPart) && !/^[1-9]\d{0,2}(,\d{3})+$/.test(integerPart)) {
     throw new Error(`valor inválido: "${input.trim()}"`);
   }
   if (!/^\d*$/.test(decimalPart)) {
