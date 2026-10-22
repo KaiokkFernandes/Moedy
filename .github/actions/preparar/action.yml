@@ -1,0 +1,14 @@
+name: Preparar o projeto
+description: Node da versão do .nvmrc, cache do Yarn e dependências instaladas com o yarn.lock travado.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: yarn
+
+    # --immutable: falha se o yarn.lock não bater com os package.json
+    - name: Instalar dependências
+      shell: bash
+      run: yarn install --immutable

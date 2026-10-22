@@ -1,54 +1,89 @@
 name: CI
 
+# Roda em todo pull request e em cada push na main. Para exigir que tudo passe antes do merge,
+# marque o check "CI ok" como obrigatório na proteção da main (veja CONTRIBUTING.md).
 on:
+  pull_request:
   push:
     branches: [main]
-  pull_request:
+  workflow_dispatch:
 
+# Um push novo no mesmo PR cancela a verificação anterior, que ficou desatualizada
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
-  verificar:
-    name: Typecheck, testes e build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar
+      - name: Lint (backend e frontend, nenhum aviso tolerado)
+        run: yarn lint
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: yarn
-
-      # --immutable: falha se o yarn.lock não bater com os package.json
-      - name: Instalar dependências
-        run: yarn install --immutable
-
-      - name: Typecheck
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar
+      - name: Typecheck (backend e frontend)
         run: yarn typecheck
 
-      - name: Lint do frontend
-        run: yarn workspace frontend lint
+  testes:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar
+      - name: Testes com cobertura mínima
+        run: |
+          set -o pipefail
+          yarn test:coverage 2>&1 | tee testes.log
+      - name: Resumo da cobertura
+        if: always()
+        run: |
+          {
+            echo "## Cobertura dos testes"
+            for parte in backend frontend; do
+              echo "### $parte"
+              echo '```text'
+              # Cada workspace imprime uma tabela entre "start" e "end of coverage report"
+              awk -v alvo="$parte" '
+                /start of coverage report/ { bloco++; dentro = 1; next }
+                /end of coverage report/ { dentro = 0 }
+                dentro && ((alvo == "backend" && bloco == 1) || (alvo == "frontend" && bloco == 2)) { sub(/^(# |ℹ )/, ""); print }
+              ' testes.log
+              echo '```'
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Testes
-        run: yarn test
-
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/preparar
       - name: Build do backend e do frontend
         run: yarn build
 
   docker:
     name: Imagem Docker do backend
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
       - uses: docker/setup-buildx-action@v3
-
-      # Só valida que a imagem constrói; nada é publicado.
+      # Só valida que a imagem constrói; nada é publicado
       - name: Construir a imagem
         uses: docker/build-push-action@v6
         with:
@@ -57,3 +92,24 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Um único check para exigir na proteção da main: passa só se todos os outros passaram.
+  # "always()" faz ele rodar (e falhar) mesmo quando algum anterior falhou ou foi cancelado.
+  ci-ok:
+    name: CI ok
+    if: always()
+    needs: [lint, typecheck, testes, build, docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Conferir os resultados
+        env:
+          RESULTADOS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados: $RESULTADOS"
+          for resultado in $RESULTADOS; do
+            if [ "$resultado" != "success" ]; then
+              echo "::error::Alguma verificação não passou ($resultado)."
+              exit 1
+            fi
+          done
