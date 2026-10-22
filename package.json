@@ -21,6 +21,7 @@
     "typecheck": "yarn workspace backend typecheck && yarn workspace frontend typecheck",
     "lint": "yarn workspace backend lint && yarn workspace frontend lint",
     "test": "yarn workspace backend test && yarn workspace frontend test",
+    "test:coverage": "yarn workspace backend test:coverage && yarn workspace frontend test:coverage",
     "start": "yarn workspace backend start",
     "migrate:deploy": "yarn workspace backend migrate:deploy",
     "docker:dev": "docker compose up --build",
