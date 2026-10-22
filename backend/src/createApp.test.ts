@@ -94,6 +94,14 @@ describe("app HTTP (sem banco)", () => {
     assert.match(resposta.headers.get("x-request-id") ?? "", /^[0-9a-f-]{36}$/);
   });
 
+  it("onboarding: exige login e valida o corpo antes de tocar no banco", async () => {
+    const semLogin = await fetch(`${base}/settings/onboarding`, { method: "PUT", headers: json, body: JSON.stringify({ tourConcluido: true }) });
+    assert.equal(semLogin.status, 401);
+    const vazio = await fetch(`${base}/settings/onboarding`, { method: "PUT", headers: { ...json, Authorization: `Bearer ${signToken("u1")}` }, body: "{}" });
+    assert.equal(vazio.status, 400);
+    assert.deepEqual(((await vazio.json()) as { issues: { mensagem: string }[] }).issues[0]?.mensagem, "Informe tourConcluido ou primeirosPassosOcultos");
+  });
+
   it("configuração pública da autenticação", async () => {
     const resposta = await fetch(`${base}/auth/config`);
     assert.equal(resposta.status, 200);

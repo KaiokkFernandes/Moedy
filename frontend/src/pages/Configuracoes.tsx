@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { Sparkles } from 'lucide-react'
+import { Compass, Sparkles } from 'lucide-react'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { ErrorState, Loading } from '@/components/ui/States'
+import { useAuth } from '@/hooks/useAuth'
+import { useAtualizarOnboarding } from '@/hooks/useOnboarding'
 import { useTheme } from '@/hooks/useTheme'
+import { useTour } from '@/hooks/useTour'
 import { TEMA_LABEL, TEMAS } from '@/lib/theme'
 import { useAiSettings, useUpdateAiSettings } from '@/hooks/useAi'
 import { getErrorMessage } from '@/lib/api'
@@ -15,6 +18,9 @@ import { formatDate } from '@/lib/format'
 export function Configuracoes() {
   const settings = useAiSettings()
   const { preferencia, setPreferencia } = useTheme()
+  const { user } = useAuth()
+  const { iniciarTour } = useTour()
+  const onboarding = useAtualizarOnboarding()
   const update = useUpdateAiSettings()
   const [avisando, setAvisando] = useState(false)
   const [aceite, setAceite] = useState(false)
@@ -70,6 +76,30 @@ export function Configuracoes() {
             onChange={setPreferencia}
             options={TEMAS.map((opcao) => ({ value: opcao, label: TEMA_LABEL[opcao] }))}
           />
+        </div>
+      </section>
+
+      <section aria-labelledby="ajuda-titulo" className="mb-6 max-w-2xl rounded-2xl bg-surface p-6 ring-1 ring-line">
+        <div className="flex items-start gap-3">
+          <Compass className="mt-0.5 size-5 shrink-0 text-accent-fg" aria-hidden />
+          <div className="min-w-0">
+            <h2 id="ajuda-titulo" className="font-medium text-fg">
+              Ajuda
+            </h2>
+            <p className="mt-1 text-sm text-fg-2">Reveja onde fica cada parte do app ou volte a ver o checklist de primeiros passos.</p>
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button onClick={iniciarTour}>Refazer o tour</Button>
+          {user?.primeirosPassosOcultosEm && (
+            <Button
+              variant="secondary"
+              loading={onboarding.isPending}
+              onClick={() => onboarding.mutate({ primeirosPassosOcultos: false })}
+            >
+              Mostrar primeiros passos no Painel
+            </Button>
+          )}
         </div>
       </section>
 

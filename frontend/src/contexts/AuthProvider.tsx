@@ -37,6 +37,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [startSession],
   )
 
+  const atualizarUsuario = useCallback((dados: Partial<User>) => {
+    setUser((atual) => (atual ? { ...atual, ...dados } : atual))
+  }, [])
+
   useEffect(() => {
     setUnauthorizedHandler(logout)
     return () => setUnauthorizedHandler(() => {})
@@ -64,8 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, login, register, loginWithGoogle, logout }),
-    [user, loading, login, register, loginWithGoogle, logout],
+    () => ({ user, loading, login, register, loginWithGoogle, logout, atualizarUsuario }),
+    [user, loading, login, register, loginWithGoogle, logout, atualizarUsuario],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

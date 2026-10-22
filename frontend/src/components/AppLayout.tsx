@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
+import { TourProvider } from '@/components/onboarding/TourProvider'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { Loading } from '@/components/ui/States'
 import { useAuth } from '@/hooks/useAuth'
@@ -58,12 +59,15 @@ export function AppLayout() {
   }, [menuOpen])
 
   return (
-    <div className="min-h-screen bg-page md:flex">
+    <TourProvider>
+      <div className="min-h-screen bg-page md:flex">
       {/* Barra superior (só no celular) */}
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-line bg-surface px-4 md:hidden">
         <Brand />
         <div className="flex items-center gap-1">
-          <NotificationBell />
+          <span data-tour="notificacoes" className="inline-flex">
+            <NotificationBell />
+          </span>
           <ThemeToggle />
           <button
             type="button"
@@ -93,7 +97,9 @@ export function AppLayout() {
           <Brand />
           {/* No celular, o sino e o tema ficam na barra superior */}
           <div className="hidden items-center gap-1 md:flex">
-            <NotificationBell />
+            <span data-tour="notificacoes" className="inline-flex">
+              <NotificationBell />
+            </span>
             <ThemeToggle />
           </div>
           <button
@@ -112,6 +118,8 @@ export function AppLayout() {
               key={to}
               to={to}
               end={to === '/'}
+              // Âncora do tour guiado (ex.: nav-contas)
+              data-tour={to === '/' ? 'nav-painel' : `nav-${to.slice(1)}`}
               onClick={() => setMenuOpen(false)}
               className={({ isActive }) =>
                 clsx(
@@ -148,6 +156,7 @@ export function AppLayout() {
           <Outlet />
         </Suspense>
       </main>
-    </div>
+      </div>
+    </TourProvider>
   )
 }

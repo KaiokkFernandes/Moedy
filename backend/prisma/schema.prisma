@@ -62,6 +62,10 @@ model User {
   // Uso da IA na importação: desligado por padrão; iaConsentidaEm guarda quando o usuário aceitou o aviso
   usarIaImportacao Boolean   @default(false)
   iaConsentidaEm   DateTime?
+  // Onboarding: quando o usuário concluiu ou pulou o tour guiado, e quando ocultou o checklist de
+  // primeiros passos do Painel. Nulos = ainda não; o app oferece o tour no primeiro acesso.
+  onboardingTourEm         DateTime?
+  primeirosPassosOcultosEm DateTime?
 }
 
 model Account {

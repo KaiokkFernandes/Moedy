@@ -9,6 +9,8 @@
  */
 @theme inline {
   --color-page: var(--page);
+  /* Fundo escurecido atrás de modais, do menu no celular e do tour guiado */
+  --color-overlay: var(--overlay);
   --color-surface: var(--surface);
   --color-elevated: var(--elevated);
   --color-subtle: var(--subtle);
@@ -55,6 +57,7 @@
 :root {
   color-scheme: light;
   --page: #f8fafc;
+  --overlay: rgb(15 23 42 / 0.5);
   --surface: #ffffff;
   --elevated: #ffffff;
   --subtle: #f1f5f9;
@@ -109,6 +112,7 @@
 .dark {
   color-scheme: dark;
   --page: #0f1115;
+  --overlay: rgb(0 0 0 / 0.65);
   --surface: #171a21;
   --elevated: #1f232c;
   --subtle: #242935;

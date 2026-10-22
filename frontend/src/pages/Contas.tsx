@@ -22,7 +22,7 @@ export function Contas() {
   const [deleting, setDeleting] = useState<Account | null>(null)
 
   const newButton = (
-    <Button onClick={() => setForm({})}>
+    <Button onClick={() => setForm({})} data-tour="nova-conta">
       <Plus className="size-4" aria-hidden />
       Nova conta
     </Button>
