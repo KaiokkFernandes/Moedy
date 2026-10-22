@@ -44,6 +44,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Antes de pintar: aplica a classe e relê a paleta, para os gráficos já saírem no tema certo
   useLayoutEffect(() => {
     aplicarTema(tema)
+    // A paleta vem do CSS e só pode ser lida depois que a classe do tema está na página: aqui o
+    // efeito sincroniza com o DOM, que é o uso correto (calcular durante o render leria o tema velho)
+    // oxlint-disable-next-line react/set-state-in-effect
     setPaleta(lerPaleta())
   }, [tema])
 

@@ -1770,6 +1770,7 @@ __metadata:
     jose: "npm:^6.2.12"
     jsonwebtoken: "npm:^9.0.3"
     multer: "npm:^2.4.0"
+    oxlint: "npm:^1.81.0"
     pino: "npm:^10.4.0"
     pino-http: "npm:^11.0.0"
     pino-pretty: "npm:^13.2.0"
