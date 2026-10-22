@@ -10,6 +10,8 @@ export interface AuthContextValue {
   /** Entra (ou cria a conta) com o token entregue pelo botão do Google. */
   loginWithGoogle: (credential: string) => Promise<void>
   logout: () => void
+  /** Atualiza campos do usuário em memória (ex.: depois de salvar o andamento do onboarding). */
+  atualizarUsuario: (dados: Partial<User>) => void
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

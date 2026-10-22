@@ -7,11 +7,13 @@ import { DailyPaceChart } from '@/components/charts/DailyPaceChart'
 import { MonthlyChart } from '@/components/charts/MonthlyChart'
 import { Variation } from '@/components/charts/Variation'
 import { StatCard } from '@/components/dashboard/StatCard'
+import { PrimeirosPassos } from '@/components/onboarding/PrimeirosPassos'
 import { TransactionMiniList } from '@/components/dashboard/TransactionMiniList'
 import { PageHeader } from '@/components/PageHeader'
 import { MonthSelector } from '@/components/ui/MonthSelector'
 import { ErrorState } from '@/components/ui/States'
 import { useAccounts } from '@/hooks/useAccounts'
+import { useAuth } from '@/hooks/useAuth'
 import { useBudgets } from '@/hooks/useBudgets'
 import {
   useReportByCategory,
@@ -30,6 +32,7 @@ const seeAllClass = 'shrink-0 text-sm font-medium text-accent-fg hover:underline
 
 export function Painel() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [params, setParams] = useSearchParams()
 
   // Mês em foco, guardado na URL (?mes=2026-09). Sem o parâmetro (ou com um mês futuro/inválido), é o mês atual.
@@ -75,7 +78,10 @@ export function Painel() {
         }
       />
 
-      {accounts.data?.length === 0 && (
+      <PrimeirosPassos />
+
+      {/* Com o checklist oculto, quem ainda não tem conta continua vendo o convite */}
+      {accounts.data?.length === 0 && user?.primeirosPassosOcultosEm && (
         <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl bg-surface p-5 ring-1 ring-line">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft-strong text-success">
             <Landmark className="size-5" aria-hidden />
