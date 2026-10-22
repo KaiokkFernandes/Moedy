@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { IconButton } from './Button'
 
@@ -16,6 +16,7 @@ interface ModalProps {
  */
 export function Modal({ open, onClose, title, children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null)
+  const tituloId = useId()
 
   useEffect(() => {
     const dialog = ref.current
@@ -27,6 +28,8 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   return (
     <dialog
       ref={ref}
+      // O título dá nome ao diálogo para leitores de tela ("Nova conta, diálogo")
+      aria-labelledby={tituloId}
       onClose={onClose}
       // O clique no fundo chega no próprio <dialog>; cliques no conteúdo chegam nos filhos
       onClick={(event) => {
@@ -37,7 +40,9 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       {open && (
         <div className="p-6">
           <div className="mb-5 flex items-start justify-between gap-4">
-            <h2 className="text-lg font-semibold text-fg">{title}</h2>
+            <h2 id={tituloId} className="text-lg font-semibold text-fg">
+              {title}
+            </h2>
             <IconButton label="Fechar" onClick={onClose} className="-m-2">
               <X className="size-5" />
             </IconButton>
