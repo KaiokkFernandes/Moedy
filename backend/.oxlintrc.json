@@ -1,0 +1,17 @@
+{
+  "$schema": "../node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "oxc", "node", "import"],
+  "categories": { "correctness": "error", "suspicious": "warn" },
+  "ignorePatterns": ["src/generated/**", "dist/**"],
+  "rules": {
+    "import/no-cycle": "error",
+    // _sum, _count, _avg e _all fazem parte da API de agregação do Prisma
+    "no-underscore-dangle": "off",
+    // Imports só pelo efeito são intencionais: dotenv/config e a trava do seed em produção
+    "import/no-unassigned-import": "off",
+    // bcrypt.hash / bcrypt.compare é o uso documentado do bcryptjs
+    "import/no-named-as-default-member": "off",
+    // O Express 5 encaminha ao errorHandler as promessas rejeitadas dos handlers async
+    "oxc/no-async-endpoint-handlers": "off"
+  }
+}

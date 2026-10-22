@@ -125,10 +125,15 @@ Upstash) está em [DEPLOY.md](DEPLOY.md).
 ## Scripts úteis
 
 ```bash
-yarn typecheck   # confere os tipos dos dois workspaces
-yarn test        # testes dos dois workspaces
-yarn build       # build de produção (backend em backend/dist, frontend em frontend/dist)
+yarn lint            # oxlint nos dois workspaces (nenhum aviso tolerado)
+yarn typecheck       # confere os tipos dos dois workspaces
+yarn test            # testes unitários dos dois workspaces
+yarn test:coverage   # testes com relatório e cobertura mínima
+yarn build           # build de produção (backend em backend/dist, frontend em frontend/dist)
 ```
+
+Toda mudança entra na `main` por pull request, com o CI verde (lint, typecheck, testes, build e imagem
+Docker). O fluxo completo e como proteger a `main` estão em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Prisma
 

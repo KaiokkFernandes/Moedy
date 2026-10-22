@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings",
     "preview": "vite preview",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "test:coverage": "node --import tsx --test --experimental-test-coverage --test-coverage-exclude='src/**/*.test.ts' --test-coverage-exclude='src/generated/**' --test-coverage-exclude='node_modules/**' --test-coverage-lines=90 --test-coverage-branches=90 --test-coverage-functions=85 \"src/**/*.test.ts\"",
     "typecheck": "tsc -b"
   },
   "dependencies": {
