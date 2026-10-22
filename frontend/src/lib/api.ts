@@ -13,7 +13,8 @@ export const tokenStorage = {
  * Vazio (padrão): as chamadas vão para /api na mesma origem. É o caso da Vercel, que serve a API
  * no mesmo endereço, e do desenvolvimento, em que o proxy do Vite encaminha para o backend local.
  */
-const API_URL = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
+// `?.`: fora do Vite (nos testes com Node) não existe import.meta.env
+const API_URL = (import.meta.env?.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
 
 export const api = axios.create({
   baseURL: `${API_URL}/api`,
