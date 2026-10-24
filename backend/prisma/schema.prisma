@@ -14,7 +14,7 @@ enum AccountType {
   POUPANCA
   CARTAO
   DINHEIRO
-}
+} 
 
 enum AccountOrigin {
   MANUAL
